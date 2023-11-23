@@ -2,35 +2,25 @@
 
 This repository hosts a Python-based financial analysis project, leveraging `yfinance` for stock data and `Jupyter Notebook` for interactive data exploration and visualization.
 
-## Setup and Installation
-
-Follow these steps to set up the project environment:
+## Setup :
 
 1. **Clone the Repository**
    ```bash
    git clone [Your Repository URL]
    cd [Your Repository Name]
     ```
-2. **Initialize the Project with Poetry**
+2. **Install Dependencies**
    ```bash
-   poetry init
+    /usr/bin/pip3 install jupyter
+    /usr/bin/pip3 install yfinance
     ```
-3. **Add dependencies**
+3. **Launch Jupyter Notebook**
    ```bash
-   poetry add yfinance jupyter
-    ```
-4. **Install Dependencies and Start Virtual Environment**
-   ```bash
-    poetry install
-    poetry shell
-    ```
-5. **Launch Jupyter Notebook**
-   ```bash
-    poetry run jupyter notebook
+    jupyter notebook
     ```
 
 ## Contact
 
-Your Name - [dana.spk5@gmail.com](mailto:dana.spk5@gmail.com)
+Saumik Dana - [dana.spk5@gmail.com](mailto:dana.spk5@gmail.com)
 
 
