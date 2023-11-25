@@ -9,18 +9,27 @@ This repository hosts a Python-based financial analysis project, leveraging `Jup
    git clone [Your Repository URL]
    cd [Your Repository Name]
     ```
-2. **Install Dependencies**
+2. **Install Conda**
+    Download and install. Restart laptop after installation
+3. **Install Dependencies**
+    Likely, the default base environment will be active when you start terminal. Install dependencies
+    as needed. To be updated regularly
    ```bash
-    /usr/bin/pip3 install jupyter
-    /usr/bin/pip3 install yfinance
-    /usr/bin/pip3 install yellowbrick
-    /usr/bin/pip3 install gdown
-    brew install hdf5
+    conda install -c conda-forge pandas-datareader
+    pip install gdown
+    pip install yfinance
+    conda install -c conda-forge yellowbrick
     ```
-3. **Launch Jupyter Notebook**
+4. **Launch Jupyter Notebook**
    ```bash
-    jupyter notebook
+    jupyter notebook &
     ```
+
+## Scripts
+
+1. *ml_trading.ipynb*
+2. *ml_workflow.ipynb*
+3. *data/create_data.ipynb*
 
 ## Contact
 
