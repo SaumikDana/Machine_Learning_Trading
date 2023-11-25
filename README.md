@@ -14,6 +14,8 @@ This repository hosts a Python-based financial analysis project, leveraging `Jup
     /usr/bin/pip3 install jupyter
     /usr/bin/pip3 install yfinance
     /usr/bin/pip3 install yellowbrick
+    /usr/bin/pip3 install gdown
+    brew install hdf5
     ```
 3. **Launch Jupyter Notebook**
    ```bash
