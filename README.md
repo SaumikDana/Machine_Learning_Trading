@@ -19,6 +19,7 @@ This repository hosts a Python-based financial analysis project, leveraging `Jup
     pip install gdown
     pip install yfinance
     conda install -c conda-forge yellowbrick
+    conda install -c conda-forge linearmodels
     ```
 4. **Launch Jupyter Notebook**
    ```bash
