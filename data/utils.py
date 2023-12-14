@@ -56,3 +56,56 @@ class MultipleTimeSeriesCV:
 
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
+
+import matplotlib.pyplot as plt
+
+def analyze_options(ticker, released, call_options, put_options):
+    """
+    Analyze and plot options data for a given ticker.
+    
+    Parameters:
+    ticker (str): The stock ticker symbol.
+    released (str): 'Yes' if earnings have been released, otherwise 'No'.
+    call_options (DataFrame): DataFrame containing call options data.
+    put_options (DataFrame): DataFrame containing put options data.
+    """
+    if released == 'Yes':
+        # Setting up the figure and axes for a 1 row, 3 column layout
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+        # Set the main title of the figure
+        fig.suptitle(f"Options Analysis for {ticker}", fontsize=16)
+
+        # Plot 1: Volume vs Open Interest for Calls
+        axs[0].bar(call_options['strike'], call_options['volume'], color='blue', alpha=0.7, label='Volume')
+        axs[0].bar(call_options['strike'], call_options['openInterest'], color='green', alpha=0.5, label='Open Interest')
+        axs[0].set_title('Call Options Volume vs Open Interest')
+        axs[0].set_xlabel('Strike Price')
+        axs[0].legend()
+
+        # Plot 2: Volume vs Open Interest for Puts
+        axs[1].bar(put_options['strike'], put_options['volume'], color='red', alpha=0.7, label='Volume')
+        axs[1].bar(put_options['strike'], put_options['openInterest'], color='orange', alpha=0.5, label='Open Interest')
+        axs[1].set_title('Put Options Volume vs Open Interest')
+        axs[1].set_xlabel('Strike Price')
+        axs[1].legend()
+
+        # Plot 3: Implied Volatility Skew
+        axs[2].plot(call_options['strike'], call_options['impliedVolatility'], label='Call IV', color='blue')
+        axs[2].plot(put_options['strike'], put_options['impliedVolatility'], label='Put IV', color='red')
+        axs[2].set_title('Implied Volatility Skew')
+        axs[2].set_xlabel('Strike Price')
+        axs[2].set_ylabel('Implied Volatility')
+        axs[2].legend()
+
+        plt.tight_layout()
+        plt.show()
+
+        # Moneyness of Options
+        itm_calls_count = call_options[call_options['inTheMoney']].shape[0]
+        otm_calls_count = call_options[~call_options['inTheMoney']].shape[0]
+        itm_puts_count = put_options[put_options['inTheMoney']].shape[0]
+        otm_puts_count = put_options[~put_options['inTheMoney']].shape[0]
+
+        print(f"ITM Calls: {itm_calls_count}, OTM Calls: {otm_calls_count}")
+        print(f"ITM Puts: {itm_puts_count}, OTM Puts: {otm_puts_count}")
