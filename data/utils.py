@@ -112,48 +112,52 @@ def analyze_options(ticker, released, call_options, put_options):
 
 # utils.py
 
-import yfinance as yf
+import yfinance as yf  # Import the yfinance library to access Yahoo Finance data
 
 def analyze_stock_options(ticker):
+    # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
 
-    # Initialize variables for options data
+    # Initialize variables for aggregating options data
     total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, 0
     total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, 0
-    total_itm_calls, total_itm_puts = 0, 0
-    exp_dates_count = 0
+    total_itm_calls, total_itm_puts = 0, 0  # Counters for in-the-money options
+    exp_dates_count = 0  # Counter for the number of expiration dates
 
-    # Get options expiration dates
+    # Get the list of options expiration dates for the stock
     exp_dates = stock.options
 
-    # Retrieve and analyze options data for each expiration date
+    # Loop through each expiration date to analyze options data
     for date in exp_dates:
+        # Retrieve call and put options data for the current expiration date
         options_data = stock.option_chain(date)
         call_options, put_options = options_data.calls, options_data.puts
 
-        # Aggregate call and put metrics
+        # Aggregate call options data: sum volumes and open interests, calculate mean implied volatility
         total_call_volume += call_options['volume'].sum()
         total_call_open_interest += call_options['openInterest'].sum()
         total_call_implied_volatility += call_options['impliedVolatility'].mean()
 
+        # Aggregate put options data: sum volumes and open interests, calculate mean implied volatility
         total_put_volume += put_options['volume'].sum()
         total_put_open_interest += put_options['openInterest'].sum()
         total_put_implied_volatility += put_options['impliedVolatility'].mean()
 
-        # Count ITM options
+        # Count in-the-money options: calls with strike price below stock price and puts with strike price above
         total_itm_calls += call_options[call_options['inTheMoney']].shape[0]
         total_itm_puts += put_options[put_options['inTheMoney']].shape[0]
 
+        # Increment the expiration dates counter
         exp_dates_count += 1
 
-    # Averaging implied volatility over all expiration dates
+    # Calculate average implied volatility if there are expiration dates
     if exp_dates_count > 0:
         avg_call_implied_volatility = total_call_implied_volatility / exp_dates_count
         avg_put_implied_volatility = total_put_implied_volatility / exp_dates_count
     else:
         avg_call_implied_volatility = avg_put_implied_volatility = 0
 
-    # Return a dictionary of calculated metrics
+    # Return a dictionary with the aggregated and calculated options metrics
     return {
         "avg_call_implied_volatility": avg_call_implied_volatility,
         "avg_put_implied_volatility": avg_put_implied_volatility,
@@ -164,6 +168,8 @@ def analyze_stock_options(ticker):
         "total_itm_calls": total_itm_calls,
         "total_itm_puts": total_itm_puts
     }
+
+# Example usage: analyze_stock_options('AAPL')
 
 # utils.py
 
