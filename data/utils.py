@@ -169,7 +169,10 @@ def analyze_stock_options(ticker):
 
 # Other imports and methods...
 
-def print_options_data(ticker, options_metrics, sentiment):
+def print_options_data(ticker, options_metrics):
+    calls_metric = options_metrics['total_call_volume'] + options_metrics['total_call_open_interest']
+    puts_metric = options_metrics['total_put_volume'] + options_metrics['total_put_open_interest']
+    sentiment = "Bullish" if calls_metric > puts_metric else "Bearish"
     print(f"===========================================")
     print(f"Options data for {ticker}:")
     print(f"Market Sentiment for {ticker} is leaning {sentiment}.")
@@ -181,3 +184,25 @@ def print_options_data(ticker, options_metrics, sentiment):
     print(f"Total Put open interest: {options_metrics['total_put_open_interest']}")
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
+
+# utils.py
+
+import matplotlib.dates as mdates
+
+# Other imports and methods...
+
+def plot_stock_history(ticker, start_date, end_date):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(start=start_date, end=end_date)
+
+    # Plotting the closing prices
+    plt.figure(figsize=(3, 3))
+    plt.plot(hist.index, hist['Close'])
+    plt.title(f"Stock Price History of {ticker} Over the Past Week", fontsize=8)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))  # Format as 'Month-Day'
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())  # Set major ticks to days
+    plt.xticks(rotation=45)  # Rotate for better readability
+    plt.xlabel('Date', fontsize=8)
+    plt.ylabel('Closing Price', fontsize=8)
+    plt.grid(True)
+    plt.show()
