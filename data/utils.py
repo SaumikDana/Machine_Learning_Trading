@@ -206,3 +206,35 @@ def plot_stock_history(ticker, start_date, end_date):
     plt.ylabel('Closing Price', fontsize=8)
     plt.grid(True)
     plt.show()
+
+# Function to fetch stock price using yfinance
+def get_stock_price(ticker):
+    stock = yf.Ticker(ticker)
+    try:
+        stock_info = stock.info
+        price = stock_info.get('currentPrice')
+        return price
+    except ValueError as e:
+        print(f"Error retrieving info for {ticker}: {e}")
+        return None
+
+import pandas as pd
+
+def process_earnings_table(ticker_data_list, table, threshold, index):
+    """
+    Process a single earnings table to extract ticker symbols, 
+    determine release status, and fetch stock prices.
+    """
+    # earning_date = f'Earnings_{index+1}'
+    df = pd.read_html(str(table))[0]
+    release_status = 'Yes' if index < threshold else 'No'
+    # df['Released'] = release_status
+
+    if 'Symbol' in df.columns:
+        ticker_symbols = df['Symbol'].dropna().unique()
+        for ticker in ticker_symbols:
+            price = get_stock_price(ticker)
+            ticker_data_list.append(pd.DataFrame(
+                {'Symbol': [ticker], 'Stock Price': [price], 'Released': [release_status]}))
+
+    return ticker_data_list
