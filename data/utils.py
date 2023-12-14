@@ -109,3 +109,75 @@ def analyze_options(ticker, released, call_options, put_options):
 
         print(f"ITM Calls: {itm_calls_count}, OTM Calls: {otm_calls_count}")
         print(f"ITM Puts: {itm_puts_count}, OTM Puts: {otm_puts_count}")
+
+# utils.py
+
+import yfinance as yf
+
+def analyze_stock_options(ticker):
+    stock = yf.Ticker(ticker)
+
+    # Initialize variables for options data
+    total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, 0
+    total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, 0
+    total_itm_calls, total_itm_puts = 0, 0
+    exp_dates_count = 0
+
+    # Get options expiration dates
+    exp_dates = stock.options
+
+    # Retrieve and analyze options data for each expiration date
+    for date in exp_dates:
+        options_data = stock.option_chain(date)
+        call_options, put_options = options_data.calls, options_data.puts
+
+        # Aggregate call and put metrics
+        total_call_volume += call_options['volume'].sum()
+        total_call_open_interest += call_options['openInterest'].sum()
+        total_call_implied_volatility += call_options['impliedVolatility'].mean()
+
+        total_put_volume += put_options['volume'].sum()
+        total_put_open_interest += put_options['openInterest'].sum()
+        total_put_implied_volatility += put_options['impliedVolatility'].mean()
+
+        # Count ITM options
+        total_itm_calls += call_options[call_options['inTheMoney']].shape[0]
+        total_itm_puts += put_options[put_options['inTheMoney']].shape[0]
+
+        exp_dates_count += 1
+
+    # Averaging implied volatility over all expiration dates
+    if exp_dates_count > 0:
+        avg_call_implied_volatility = total_call_implied_volatility / exp_dates_count
+        avg_put_implied_volatility = total_put_implied_volatility / exp_dates_count
+    else:
+        avg_call_implied_volatility = avg_put_implied_volatility = 0
+
+    # Return a dictionary of calculated metrics
+    return {
+        "avg_call_implied_volatility": avg_call_implied_volatility,
+        "avg_put_implied_volatility": avg_put_implied_volatility,
+        "total_call_volume": total_call_volume,
+        "total_call_open_interest": total_call_open_interest,
+        "total_put_volume": total_put_volume,
+        "total_put_open_interest": total_put_open_interest,
+        "total_itm_calls": total_itm_calls,
+        "total_itm_puts": total_itm_puts
+    }
+
+# utils.py
+
+# Other imports and methods...
+
+def print_options_data(ticker, options_metrics, sentiment):
+    print(f"===========================================")
+    print(f"Options data for {ticker}:")
+    print(f"Market Sentiment for {ticker} is leaning {sentiment}.")
+    print(f"Average Implied Volatility for Calls: {options_metrics['avg_call_implied_volatility']}")
+    print(f"Average Implied Volatility for Puts: {options_metrics['avg_put_implied_volatility']}")
+    print(f"Total Call Volume: {options_metrics['total_call_volume']}")
+    print(f"Total Call open interest: {options_metrics['total_call_open_interest']}")
+    print(f"Total Put Volume: {options_metrics['total_put_volume']}")
+    print(f"Total Put open interest: {options_metrics['total_put_open_interest']}")
+    print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
+    print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
