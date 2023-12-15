@@ -314,3 +314,38 @@ def get_options_data(ticker_symbol):
         print(f"\nOptions Data for {ticker_symbol} is not available or an error occurred:", e)
 
     return
+
+# VIX
+def get_stock_data(ticker, start_date, end_date):
+    """ Fetch historical stock data using yf.Ticker """
+    stock = yf.Ticker(ticker)
+    stock_data = stock.history(start=start_date, end=end_date)
+    return stock_data['Close']
+
+def calculate_beta(stock_data, market_data):
+    """ Calculate the beta of the stock """
+    # Calculating the percentage change
+    stock_returns = stock_data.pct_change()
+    market_returns = market_data.pct_change()
+
+    # Covariance and variance
+    covariance = stock_returns.cov(market_returns)
+    variance = market_returns.var()
+
+    # Beta calculation
+    beta = covariance / variance
+    return beta
+
+def get_stock_beta(stock_ticker, start_date, end_date):
+    """ Calculate and print the beta of a given stock """
+    market_index_ticker = '^GSPC'  # S&P 500
+
+    # Fetching the data
+    stock_data = get_stock_data(stock_ticker, start_date, end_date)
+    market_data = get_stock_data(market_index_ticker, start_date, end_date)
+
+    # Calculating the beta
+    beta_value = calculate_beta(stock_data, market_data)
+    print(f"Beta of {stock_ticker}: {beta_value}")
+    
+    return 
