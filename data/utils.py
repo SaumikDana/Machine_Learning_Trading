@@ -193,7 +193,8 @@ def print_options_data(ticker, options_metrics, release_day):
 
     print("===========================================")
     print(f"Options data for {ticker}:")
-    print(f"Earnings Released on {release_date.strftime('%b %d, %Y')}")
+    if release_day != -1:
+        print(f"Earnings Released on {release_date.strftime('%b %d, %Y')}")
     print(f"Market Sentiment for {ticker} is leaning {options_metrics['sentiment']}.")
     print(f"Average Implied Volatility for Calls: {options_metrics['avg_call_implied_volatility']}")
     print(f"Average Implied Volatility for Puts: {options_metrics['avg_put_implied_volatility']}")
@@ -212,7 +213,7 @@ def plot_stock_history(ticker, start_date, end_date):
 
     # Plotting the closing prices
     plt.figure(figsize=(3, 3))
-    plt.plot(hist.index, hist['Close'], '-o')
+    plt.plot(hist.index, hist['Close'], '-o', markersize=2)
     plt.title(f"Stock Price History of {ticker} Over the Past Week", fontsize=8)
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))  # Format as 'Month-Day'
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())  # Set major ticks to days
@@ -220,6 +221,8 @@ def plot_stock_history(ticker, start_date, end_date):
     plt.xlabel('Date', fontsize=8)
     plt.ylabel('Closing Price', fontsize=8)
     plt.grid(True)
+    plt.tick_params(axis='x', labelsize=8)
+
     plt.show()
 
 # Function to fetch stock price using yfinance
