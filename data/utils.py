@@ -17,13 +17,15 @@ class MultipleTimeSeriesCV:
     Assumes the MultiIndex contains levels 'symbol' and 'date'
     purges overlapping outcomes"""
 
-    def __init__(self,
-                 n_splits=3,
-                 train_period_length=126,
-                 test_period_length=21,
-                 lookahead=None,
-                 date_idx='date',
-                 shuffle=False):
+    def __init__(
+        self,
+        n_splits=3,
+        train_period_length=126,
+        test_period_length=21,
+        lookahead=None,
+        date_idx='date',
+        shuffle=False
+    ):
         self.n_splits = n_splits
         self.lookahead = lookahead
         self.test_length = test_period_length
@@ -59,58 +61,56 @@ class MultipleTimeSeriesCV:
 
 import matplotlib.pyplot as plt
 
-def analyze_options(ticker, released, call_options, put_options):
+def analyze_options(ticker, call_options, put_options):
     """
     Analyze and plot options data for a given ticker.
     
     Parameters:
     ticker (str): The stock ticker symbol.
-    released (str): 'Yes' if earnings have been released, otherwise 'No'.
     call_options (DataFrame): DataFrame containing call options data.
     put_options (DataFrame): DataFrame containing put options data.
     """
-    if released == 'Yes':
-        # Setting up the figure and axes for a 1 row, 3 column layout
-        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    # Setting up the figure and axes for a 1 row, 3 column layout
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 
-        # Set the main title of the figure
-        fig.suptitle(f"Options Analysis for {ticker}", fontsize=16)
+    # Set the main title of the figure
+    fig.suptitle(f"Options Analysis for {ticker}", fontsize=16)
 
-        # Plot 1: Volume vs Open Interest for Calls
-        axs[0].bar(call_options['strike'], call_options['volume'], color='blue', alpha=0.7, label='Volume')
-        axs[0].bar(call_options['strike'], call_options['openInterest'], color='green', alpha=0.5, label='Open Interest')
-        axs[0].set_title('Call Options Volume vs Open Interest')
-        axs[0].set_xlabel('Strike Price')
-        axs[0].legend()
+    # Plot 1: Volume vs Open Interest for Calls
+    axs[0].bar(call_options['strike'], call_options['volume'], color='blue', alpha=0.7, label='Volume')
+    axs[0].bar(call_options['strike'], call_options['openInterest'], color='green', alpha=0.5, label='Open Interest')
+    axs[0].set_title('Call Options Volume vs Open Interest')
+    axs[0].set_xlabel('Strike Price')
+    axs[0].legend()
 
-        # Plot 2: Volume vs Open Interest for Puts
-        axs[1].bar(put_options['strike'], put_options['volume'], color='red', alpha=0.7, label='Volume')
-        axs[1].bar(put_options['strike'], put_options['openInterest'], color='orange', alpha=0.5, label='Open Interest')
-        axs[1].set_title('Put Options Volume vs Open Interest')
-        axs[1].set_xlabel('Strike Price')
-        axs[1].legend()
+    # Plot 2: Volume vs Open Interest for Puts
+    axs[1].bar(put_options['strike'], put_options['volume'], color='red', alpha=0.7, label='Volume')
+    axs[1].bar(put_options['strike'], put_options['openInterest'], color='orange', alpha=0.5, label='Open Interest')
+    axs[1].set_title('Put Options Volume vs Open Interest')
+    axs[1].set_xlabel('Strike Price')
+    axs[1].legend()
 
-        # Plot 3: Implied Volatility Skew
-        axs[2].plot(call_options['strike'], call_options['impliedVolatility'], label='Call IV', color='blue')
-        axs[2].plot(put_options['strike'], put_options['impliedVolatility'], label='Put IV', color='red')
-        axs[2].set_title('Implied Volatility Skew')
-        axs[2].set_xlabel('Strike Price')
-        axs[2].set_ylabel('Implied Volatility')
-        axs[2].legend()
+    # Plot 3: Implied Volatility Skew
+    axs[2].plot(call_options['strike'], call_options['impliedVolatility'], label='Call IV', color='blue')
+    axs[2].plot(put_options['strike'], put_options['impliedVolatility'], label='Put IV', color='red')
+    axs[2].set_title('Implied Volatility Skew')
+    axs[2].set_xlabel('Strike Price')
+    axs[2].set_ylabel('Implied Volatility')
+    axs[2].legend()
 
-        plt.tight_layout()
-        plt.show()
+    plt.tight_layout()
+    plt.show()
 
-        # Moneyness of Options
-        itm_calls_count = call_options[call_options['inTheMoney']].shape[0]
-        otm_calls_count = call_options[~call_options['inTheMoney']].shape[0]
-        itm_puts_count = put_options[put_options['inTheMoney']].shape[0]
-        otm_puts_count = put_options[~put_options['inTheMoney']].shape[0]
+    # Moneyness of Options
+    itm_calls_count = call_options[call_options['inTheMoney']].shape[0]
+    otm_calls_count = call_options[~call_options['inTheMoney']].shape[0]
+    itm_puts_count = put_options[put_options['inTheMoney']].shape[0]
+    otm_puts_count = put_options[~put_options['inTheMoney']].shape[0]
 
-        print(f"ITM Calls: {itm_calls_count}, OTM Calls: {otm_calls_count}")
-        print(f"ITM Puts: {itm_puts_count}, OTM Puts: {otm_puts_count}")
+    print(f"ITM Calls: {itm_calls_count}, OTM Calls: {otm_calls_count}")
+    print(f"ITM Puts: {itm_puts_count}, OTM Puts: {otm_puts_count}")
 
-# utils.py
+    return
 
 import yfinance as yf  # Import the yfinance library to access Yahoo Finance data
 
@@ -157,8 +157,13 @@ def analyze_stock_options(ticker):
     else:
         avg_call_implied_volatility = avg_put_implied_volatility = 0
 
+    calls_metric = total_call_volume + total_call_open_interest
+    puts_metric = total_put_volume + total_put_open_interest
+    sentiment = "Bullish" if calls_metric > puts_metric else "Bearish"
+
     # Return a dictionary with the aggregated and calculated options metrics
     return {
+        "sentiment": sentiment,
         "avg_call_implied_volatility": avg_call_implied_volatility,
         "avg_put_implied_volatility": avg_put_implied_volatility,
         "total_call_volume": total_call_volume,
@@ -169,19 +174,27 @@ def analyze_stock_options(ticker):
         "total_itm_puts": total_itm_puts
     }
 
-# Example usage: analyze_stock_options('AAPL')
+from datetime import datetime, timedelta
 
-# utils.py
+def get_most_recent_monday():
+    today = datetime.now()
+    # Calculate the number of days to subtract to get the most recent Monday
+    # 0 is Monday, 1 is Tuesday, ... 6 is Sunday
+    days_to_subtract = (today.weekday() - 0) % 7
+    most_recent_monday = today - timedelta(days=days_to_subtract)
+    return most_recent_monday
 
-# Other imports and methods...
+def print_options_data(ticker, options_metrics, release_day):
+    # Get the most recent Monday as the base date
+    base_date = get_most_recent_monday()
 
-def print_options_data(ticker, options_metrics):
-    calls_metric = options_metrics['total_call_volume'] + options_metrics['total_call_open_interest']
-    puts_metric = options_metrics['total_put_volume'] + options_metrics['total_put_open_interest']
-    sentiment = "Bullish" if calls_metric > puts_metric else "Bearish"
-    print(f"===========================================")
+    # Calculate the release date
+    release_date = base_date + timedelta(days=release_day)
+
+    print("===========================================")
     print(f"Options data for {ticker}:")
-    print(f"Market Sentiment for {ticker} is leaning {sentiment}.")
+    print(f"Earnings Released on {release_date.strftime('%b %d, %Y')}")
+    print(f"Market Sentiment for {ticker} is leaning {options_metrics['sentiment']}.")
     print(f"Average Implied Volatility for Calls: {options_metrics['avg_call_implied_volatility']}")
     print(f"Average Implied Volatility for Puts: {options_metrics['avg_put_implied_volatility']}")
     print(f"Total Call Volume: {options_metrics['total_call_volume']}")
@@ -191,11 +204,7 @@ def print_options_data(ticker, options_metrics):
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
 
-# utils.py
-
 import matplotlib.dates as mdates
-
-# Other imports and methods...
 
 def plot_stock_history(ticker, start_date, end_date):
     stock = yf.Ticker(ticker)
@@ -203,7 +212,7 @@ def plot_stock_history(ticker, start_date, end_date):
 
     # Plotting the closing prices
     plt.figure(figsize=(3, 3))
-    plt.plot(hist.index, hist['Close'])
+    plt.plot(hist.index, hist['Close'], '-o')
     plt.title(f"Stock Price History of {ticker} Over the Past Week", fontsize=8)
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))  # Format as 'Month-Day'
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())  # Set major ticks to days
@@ -229,18 +238,22 @@ import pandas as pd
 def process_earnings_table(ticker_data_list, table, threshold, index):
     """
     Process a single earnings table to extract ticker symbols, 
-    determine release status, and fetch stock prices.
+    determine release status, fetch stock prices, and get earnings release dates.
     """
-    # earning_date = f'Earnings_{index+1}'
     df = pd.read_html(str(table))[0]
     release_status = 'Yes' if index < threshold else 'No'
-    # df['Released'] = release_status
 
     if 'Symbol' in df.columns:
-        ticker_symbols = df['Symbol'].dropna().unique()
-        for ticker in ticker_symbols:
-            price = get_stock_price(ticker)
-            ticker_data_list.append(pd.DataFrame(
-                {'Symbol': [ticker], 'Stock Price': [price], 'Released': [release_status]}))
+        # Assuming the release date column is named 'Release Date'
+        for _, row in df.iterrows():
+            ticker = row.get('Symbol')
+            if pd.notna(ticker):
+                price = get_stock_price(ticker)
+                ticker_data_list.append(pd.DataFrame({
+                    'Symbol': [ticker],
+                    'Stock Price': [price],
+                    'Released': [release_status],
+                    'Release Day': [index]
+                }))
 
     return ticker_data_list
