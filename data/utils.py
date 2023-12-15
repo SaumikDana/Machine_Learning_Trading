@@ -1,8 +1,11 @@
-
 import numpy as np
+import matplotlib.pyplot as plt
+import yfinance as yf  
+from datetime import datetime, timedelta
+import matplotlib.dates as mdates
+import pandas as pd
 
 np.random.seed(42)
-
 
 def format_time(t):
     """Return a formatted time string 'HH:MM:SS
@@ -10,7 +13,6 @@ def format_time(t):
     m, s = divmod(t, 60)
     h, m = divmod(m, 60)
     return f'{h:0>2.0f}:{m:0>2.0f}:{s:0>2.0f}'
-
 
 class MultipleTimeSeriesCV:
     """Generates tuples of train_idx, test_idx pairs
@@ -42,12 +44,10 @@ class MultipleTimeSeriesCV:
             test_start_idx = test_end_idx + self.test_length
             train_end_idx = test_start_idx + self.lookahead - 1
             train_start_idx = train_end_idx + self.train_length + self.lookahead - 1
-            split_idx.append([train_start_idx, train_end_idx,
-                              test_start_idx, test_end_idx])
+            split_idx.append([train_start_idx, train_end_idx, test_start_idx, test_end_idx])
 
         dates = X.reset_index()[[self.date_idx]]
         for train_start, train_end, test_start, test_end in split_idx:
-
             train_idx = dates[(dates[self.date_idx] > days[train_start])
                               & (dates[self.date_idx] <= days[train_end])].index
             test_idx = dates[(dates[self.date_idx] > days[test_start])
@@ -58,8 +58,6 @@ class MultipleTimeSeriesCV:
 
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
-
-import matplotlib.pyplot as plt
 
 def analyze_options(ticker, call_options, put_options):
     """
@@ -111,8 +109,6 @@ def analyze_options(ticker, call_options, put_options):
     print(f"ITM Puts: {itm_puts_count}, OTM Puts: {otm_puts_count}")
 
     return
-
-import yfinance as yf  # Import the yfinance library to access Yahoo Finance data
 
 def analyze_stock_options(ticker):
     # Fetch the stock data using the provided ticker symbol
@@ -174,8 +170,6 @@ def analyze_stock_options(ticker):
         "total_itm_puts": total_itm_puts
     }
 
-from datetime import datetime, timedelta
-
 def get_most_recent_monday():
     today = datetime.now()
     # Calculate the number of days to subtract to get the most recent Monday
@@ -204,8 +198,8 @@ def print_options_data(ticker, options_metrics, release_day):
     print(f"Total Put open interest: {options_metrics['total_put_open_interest']}")
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
-
-import matplotlib.dates as mdates
+    
+    return
 
 def plot_stock_history(ticker, start_date, end_date):
     stock = yf.Ticker(ticker)
@@ -236,8 +230,6 @@ def get_stock_price(ticker):
         print(f"Error retrieving info for {ticker}: {e}")
         return None
 
-import pandas as pd
-
 def process_earnings_table(ticker_data_list, table, threshold, index):
     """
     Process a single earnings table to extract ticker symbols, 
@@ -260,3 +252,57 @@ def process_earnings_table(ticker_data_list, table, threshold, index):
                 }))
 
     return ticker_data_list
+
+def get_stock_data(ticker_symbol):
+    # Create a Ticker object
+    stock = yf.Ticker(ticker_symbol)
+
+    # 1. Historical Market Data (for the past 5 days)
+    hist_data = stock.history(period="5d")
+    print(f"Historical Market Data for {ticker_symbol} (Last 5 Days):")
+    print(hist_data)
+
+    # 2. Company Information
+    info = stock.info
+    print(f"\nCompany Information for {ticker_symbol}:")
+    for key, value in info.items():
+        print(f"{key}: {value}")
+
+    # 3. Financial Data
+    # Income Statement
+    income_statement = stock.financials
+    print(f"\nIncome Statement for {ticker_symbol}:")
+    print(income_statement)
+
+    # Balance Sheet
+    balance_sheet = stock.balance_sheet
+    print(f"\nBalance Sheet for {ticker_symbol}:")
+    print(balance_sheet)
+
+    # Cash Flows
+    cash_flow = stock.cashflow
+    print(f"\nCash Flow for {ticker_symbol}:")
+    print(cash_flow)
+
+    # 4. Stock Dividends and Splits
+    dividends = stock.dividends
+    splits = stock.splits
+    print(f"\nDividends for {ticker_symbol}:")
+    print(dividends)
+    print(f"\nStock Splits for {ticker_symbol}:")
+    print(splits)
+
+    # 5. Options Data (if available)
+    try:
+        options_dates = stock.options
+        print(f"\nOptions Expiry Dates for {ticker_symbol}:")
+        print(options_dates)
+        for date in options_dates:
+            options_data = stock.option_chain(date)
+            print(f"\nOptions Data for {ticker_symbol} on {date}:")
+            print("Calls:")
+            print(options_data.calls)
+            print("Puts:")
+            print(options_data.puts)
+    except Exception as e:
+        print(f"\nOptions Data for {ticker_symbol} is not available or an error occurred:", e)
