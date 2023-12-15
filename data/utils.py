@@ -291,6 +291,12 @@ def get_stock_data(ticker_symbol):
     print(dividends)
     print(f"\nStock Splits for {ticker_symbol}:")
     print(splits)
+    
+    return
+
+def get_options_data(ticker_symbol):
+    # Create a Ticker object
+    stock = yf.Ticker(ticker_symbol)
 
     # 5. Options Data (if available)
     try:
@@ -306,3 +312,5 @@ def get_stock_data(ticker_symbol):
             print(options_data.puts)
     except Exception as e:
         print(f"\nOptions Data for {ticker_symbol} is not available or an error occurred:", e)
+
+    return
