@@ -59,6 +59,54 @@ class MultipleTimeSeriesCV:
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
 
+import requests
+from bs4 import BeautifulSoup
+import pytz
+
+def scrape_and_process_marketwatch_data():
+
+    # Set the timezone to Central Time
+    central_tz = pytz.timezone('America/Chicago')
+
+    # Get the current time in Central Time Zone
+    current_time_central = datetime.now(central_tz)
+
+    # Print the current time in Central Time to verify
+    print("Current time in Central Time Zone:", current_time_central)
+
+    # Get the current day of the week
+    current_day = current_time_central.weekday()
+
+    # Set the threshold based on the current day
+    threshold = max(0, current_day - 1)
+
+    # Scrape data from MarketWatch
+    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
+    url = 'https://www.marketwatch.com/tools/earningscalendar'
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Find all tables in the webpage
+    tables = soup.find_all('table')
+
+    # Initialize list to hold DataFrame objects
+    ticker_data_list = []
+
+    # Process each table
+    for index, table in enumerate(tables):
+        if not table.find('tbody').find_all('tr'):
+            continue
+        ticker_data_list = process_earnings_table(ticker_data_list, table, threshold, index)
+
+    # Concatenate all DataFrame objects into one DataFrame
+    ticker_data = pd.concat(ticker_data_list, ignore_index=True)
+
+    # Clean and sort the data
+    ticker_data = ticker_data.dropna(subset=['Stock Price'])
+    ticker_data_sorted = ticker_data.sort_values(by='Stock Price', ascending=False)
+
+    return ticker_data_sorted
+
 def analyze_options(ticker, call_options, put_options):
     """
     Analyze and plot options data for a given ticker.
