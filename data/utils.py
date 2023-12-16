@@ -258,7 +258,7 @@ def plot_stock_history(ticker, start_date, end_date):
     # Plotting the closing prices
     plt.figure(figsize=(3, 3))
     plt.plot(hist.index, hist['Close'], '-o', markersize=2)
-    plt.title(f"Stock Price History of {ticker} Over the Past Week", fontsize=8)
+    plt.title(f"Stock Price History of {ticker}", fontsize=8)
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))  # Format as 'Month-Day'
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())  # Set major ticks to days
     plt.xticks(rotation=45)  # Rotate for better readability
@@ -374,28 +374,44 @@ def get_stock_data(ticker, start_date, end_date):
 
 def calculate_beta(stock_data, market_data):
     """ Calculate the beta of the stock """
-    # Calculating the percentage change
-    stock_returns = stock_data.pct_change()
-    market_returns = market_data.pct_change()
+    stock_returns = stock_data.pct_change().dropna()
+    market_returns = market_data.pct_change().dropna()
 
-    # Covariance and variance
     covariance = stock_returns.cov(market_returns)
     variance = market_returns.var()
 
-    # Beta calculation
-    beta = covariance / variance
-    return beta
+    return covariance / variance
+
+def plot_stock_vs_market(stock_data, market_data, ticker):
+    """ Plot stock data against market data """
+    normalized_stock = stock_data / stock_data.iloc[0]
+    normalized_market = market_data / market_data.iloc[0]
+
+    # Plotting the closing prices
+    plt.figure(figsize=(3, 3))
+    plt.plot(normalized_stock, label=f'{ticker} Stock Price ')
+    plt.plot(normalized_market, label='S&P 500')
+    plt.title(f'Stock Price vs S&P 500 (Both normalized)', fontsize=8)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))  # Format as 'Month-Day'
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())  # Set major ticks to days
+    plt.xticks(rotation=45)  # Rotate for better readability
+    plt.xlabel('Date', fontsize=8)
+    plt.ylabel('Normalized Price', fontsize=8)
+    plt.legend(fontsize=8)
+    plt.grid(True)
+    plt.tick_params(axis='x', labelsize=8)
+
+    plt.show()
+
 
 def get_stock_beta(stock_ticker, start_date, end_date):
     """ Calculate and print the beta of a given stock """
     market_index_ticker = '^GSPC'  # S&P 500
 
-    # Fetching the data
     stock_data = get_stock_data(stock_ticker, start_date, end_date)
     market_data = get_stock_data(market_index_ticker, start_date, end_date)
 
-    # Calculating the beta
     beta_value = calculate_beta(stock_data, market_data)
     print(f"Beta of {stock_ticker}: {beta_value}")
-    
-    return 
+
+    plot_stock_vs_market(stock_data, market_data, stock_ticker)
