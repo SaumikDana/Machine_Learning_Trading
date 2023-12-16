@@ -201,12 +201,14 @@ def analyze_stock_options(ticker):
     else:
         avg_call_implied_volatility = avg_put_implied_volatility = 0
 
-    calls_metric = total_call_volume + total_call_open_interest
-    puts_metric = total_put_volume + total_put_open_interest
-    sentiment = "Bullish" if calls_metric > puts_metric else "Bearish"
+    total_call_engagement = total_call_volume + total_call_open_interest
+    total_put_engagement = total_put_volume + total_put_open_interest
+    sentiment = "Bullish" if total_call_engagement > total_put_engagement else "Bearish"
 
     # Return a dictionary with the aggregated and calculated options metrics
     return {
+        "total_call_engagement": total_call_engagement,
+        "total_put_engagement": total_put_engagement,
         "sentiment": sentiment,
         "avg_call_implied_volatility": avg_call_implied_volatility,
         "avg_put_implied_volatility": avg_put_implied_volatility,
@@ -245,11 +247,11 @@ def print_options_data(ticker, options_metrics, release_day):
 
     print(f"Total Call Volume: {options_metrics['total_call_volume']}")
     print(f"Total Call open interest: {options_metrics['total_call_open_interest']}")
-    print(f"Total Call engagement: {options_metrics['total_call_volume']+options_metrics['total_call_open_interest']}")
+    print(f"Total Call engagement: {options_metrics['total_call_engagement']}")
 
     print(f"Total Put Volume: {options_metrics['total_put_volume']}")
     print(f"Total Put open interest: {options_metrics['total_put_open_interest']}")
-    print(f"Total Put engagement: {options_metrics['total_put_volume']+options_metrics['total_put_open_interest']}")
+    print(f"Total Put engagement: {options_metrics['total_put_engagement']}")
 
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
@@ -407,7 +409,7 @@ def plot_stock_vs_market(stock_data, market_data, ticker):
     plt.tick_params(axis='x', labelsize=8)
 
     plt.show()
-
+    return
 
 def get_stock_beta(stock_ticker, start_date, end_date):
     """ Calculate and print the beta of a given stock """
@@ -420,3 +422,75 @@ def get_stock_beta(stock_ticker, start_date, end_date):
     print(f"Beta of {stock_ticker}: {beta_value}")
 
     plot_stock_vs_market(stock_data, market_data, stock_ticker)
+    return beta_value
+
+def analyze_stock_performance_post_earnings(ticker, release_day, start_date, end_date):
+    """
+    Analyze the stock performance by comparing the closing price on the day of the earnings release
+    with the closing price on the following day.
+
+    :param ticker: Stock ticker symbol.
+    :param release_day: Number of days from the most recent Monday to the earnings release.
+    :param start_date: Start date for the analysis period.
+    :param end_date: End date for the analysis period.
+    :return: A message indicating whether the stock price increased or decreased after the earnings release.
+    """
+
+    # Fetch the stock data
+    stock_data = get_stock_data(ticker, start_date, end_date)
+
+    # Get the most recent Monday as the base date
+    base_date = get_most_recent_monday()
+
+    # Calculate the release date and convert to datetime with timezone
+    release_date = base_date + timedelta(days=release_day)
+    release_date = datetime(release_date.year, release_date.month, release_date.day)
+    release_date = pytz.timezone('America/New_York').localize(release_date)
+    
+    # Check if release date data is available
+    if release_date not in stock_data.index:
+        return "Data not available for the release date."
+
+    # Get closing price on the release date
+    release_day_close = stock_data.loc[stock_data.index == release_date].iloc[0]
+    
+    # Calculate the post release date
+    post_release_date = release_date + timedelta(days=1)
+
+    # Check if post release date data is available
+    if post_release_date not in stock_data.index:
+        return "Data not available for the post release date."
+
+    # Get closing price on the post release date
+    post_release_close = stock_data.loc[stock_data.index == post_release_date].iloc[0]
+
+    # Check if the price increased or decreased
+    return "Up" if post_release_close > release_day_close else "Down"
+
+def plot_values_with_directions(values, directions):
+    """
+    Plots a scatter plot of the given values with colors representing the directions.
+    
+    :param values: List of numerical values.
+    :param directions: Corresponding list of directions ('Up' or 'Down').
+    """
+    if len(values) != len(directions):
+        raise ValueError("The length of values and directions lists must be the same.")
+
+    # Convert directions to colors ('Up' as blue and 'Down' as red)
+    colors = ['blue' if d == 'Up' else 'red' for d in directions]
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(range(len(values)), values, c=colors)
+    plt.title("Scatter Plot of Values with Up/Down Directions")
+    plt.xlabel("Index")
+    plt.ylabel("Value")
+    plt.grid(True)
+
+    # Adding a legend for direction
+    plt.scatter([], [], c='blue', label='Up')
+    plt.scatter([], [], c='red', label='Down')
+    plt.legend()
+
+    plt.show()
+
