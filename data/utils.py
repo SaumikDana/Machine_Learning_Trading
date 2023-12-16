@@ -237,7 +237,9 @@ def print_options_data(ticker, options_metrics, release_day):
     print(f"Options data for {ticker}:")
     if release_day != -1:
         print(f"Earnings Released on {release_date.strftime('%b %d, %Y')}")
-    print(f"Market Sentiment for {ticker} is leaning {options_metrics['sentiment']}.")
+
+    # print(f"Market Sentiment for {ticker} is leaning {options_metrics['sentiment']}.")
+
     print(f"Average Implied Volatility for Calls: {options_metrics['avg_call_implied_volatility']}")
     print(f"Average Implied Volatility for Puts: {options_metrics['avg_put_implied_volatility']}")
     print(f"Total Call Volume: {options_metrics['total_call_volume']}")
