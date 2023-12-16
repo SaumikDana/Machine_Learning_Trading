@@ -240,8 +240,8 @@ def print_options_data(ticker, options_metrics, release_day):
 
     # print(f"Market Sentiment for {ticker} is leaning {options_metrics['sentiment']}.")
 
-    print(f"Average Implied Volatility for Calls: {options_metrics['avg_call_implied_volatility']}")
-    print(f"Average Implied Volatility for Puts: {options_metrics['avg_put_implied_volatility']}")
+    print(f"Average IV for Calls: {options_metrics['avg_call_implied_volatility']}")
+    print(f"Average IV for Puts: {options_metrics['avg_put_implied_volatility']}")
     print(f"Total Call Volume: {options_metrics['total_call_volume']}")
     print(f"Total Call open interest: {options_metrics['total_call_open_interest']}")
     print(f"Total Put Volume: {options_metrics['total_put_volume']}")
