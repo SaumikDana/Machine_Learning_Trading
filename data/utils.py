@@ -242,10 +242,15 @@ def print_options_data(ticker, options_metrics, release_day):
 
     print(f"Average IV for Calls: {options_metrics['avg_call_implied_volatility']}")
     print(f"Average IV for Puts: {options_metrics['avg_put_implied_volatility']}")
+
     print(f"Total Call Volume: {options_metrics['total_call_volume']}")
     print(f"Total Call open interest: {options_metrics['total_call_open_interest']}")
+    print(f"Total Call engagement: {options_metrics['total_call_volume']+options_metrics['total_call_open_interest']}")
+
     print(f"Total Put Volume: {options_metrics['total_put_volume']}")
     print(f"Total Put open interest: {options_metrics['total_put_open_interest']}")
+    print(f"Total Put engagement: {options_metrics['total_put_volume']+options_metrics['total_put_open_interest']}")
+
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
     
