@@ -421,7 +421,8 @@ def get_stock_beta(stock_ticker, start_date, end_date):
     beta_value = calculate_beta(stock_data, market_data)
     print(f"Beta of {stock_ticker}: {beta_value}")
 
-    plot_stock_vs_market(stock_data, market_data, stock_ticker)
+    # plot_stock_vs_market(stock_data, market_data, stock_ticker)
+
     return beta_value
 
 def analyze_stock_performance_post_earnings(ticker, release_day, start_date, end_date):
@@ -467,22 +468,32 @@ def analyze_stock_performance_post_earnings(ticker, release_day, start_date, end
     # Check if the price increased or decreased
     return "Up" if post_release_close > release_day_close else "Down"
 
-def plot_values_with_directions(values, directions):
+def plot_values_with_directions(values, directions, betas):
     """
-    Plots a scatter plot of the given values with colors representing the directions.
+    Plots a scatter plot of the given values with colors representing the directions and annotates each point with its corresponding beta value.
     
     :param values: List of numerical values.
     :param directions: Corresponding list of directions ('Up' or 'Down').
+    :param betas: List of beta values corresponding to each point.
     """
-    if len(values) != len(directions):
-        raise ValueError("The length of values and directions lists must be the same.")
+    if len(values) != len(directions) or len(values) != len(betas):
+        raise ValueError("The length of values, directions, and betas lists must be the same.")
 
     # Convert directions to colors ('Up' as blue and 'Down' as red)
     colors = ['blue' if d == 'Up' else 'red' for d in directions]
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(range(len(values)), values, c=colors)
-    plt.title("Scatter Plot of Values with Up/Down Directions")
+    sc = plt.scatter(range(len(values)), values, c=colors)
+    
+    # Annotating each point with its corresponding beta value
+    for i, beta in enumerate(betas):
+        plt.annotate(
+            f"{beta:.1f}", (i, values[i]), 
+            textcoords="offset points", 
+            xytext=(0,10), ha='center', fontsize=8
+        )
+
+    plt.title("Scatter Plot of Values with Up/Down Directions and Beta Annotations")
     plt.xlabel("Index")
     plt.ylabel("Value")
     plt.grid(True)
@@ -493,4 +504,3 @@ def plot_values_with_directions(values, directions):
     plt.legend()
 
     plt.show()
-
