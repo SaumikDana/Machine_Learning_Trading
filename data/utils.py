@@ -63,7 +63,41 @@ import requests
 from bs4 import BeautifulSoup
 import pytz
 
-def scrape_and_process_marketwatch_data():
+# Function to fetch stock price using yfinance
+def get_stock_price(ticker):
+    stock = yf.Ticker(ticker)
+    try:
+        stock_info = stock.info
+        price = stock_info.get('currentPrice')
+        return price
+    except ValueError as e:
+        print(f"Error retrieving info for {ticker}: {e}")
+        return None
+
+def process_earnings_table(ticker_data_list, table, threshold, index):
+    """
+    Process a single earnings table to extract ticker symbols, 
+    determine release status, fetch stock prices, and get earnings release dates.
+    """
+    df = pd.read_html(str(table))[0]
+    release_status = 'Yes' if index < threshold else 'No'
+
+    if 'Symbol' in df.columns:
+        # Assuming the release date column is named 'Release Date'
+        for _, row in df.iterrows():
+            ticker = row.get('Symbol')
+            if pd.notna(ticker):
+                price = get_stock_price(ticker)
+                ticker_data_list.append(pd.DataFrame({
+                    'Symbol': [ticker],
+                    'Stock Price': [price],
+                    'Released': [release_status],
+                    'Release Day': [index]
+                }))
+
+    return ticker_data_list
+
+def scrape_and_process_marketwatch_data(monday):
 
     # Set the timezone to Central Time
     central_tz = pytz.timezone('America/Chicago')
@@ -82,7 +116,12 @@ def scrape_and_process_marketwatch_data():
 
     # Scrape data from MarketWatch
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
-    url = 'https://www.marketwatch.com/tools/earningscalendar'
+    # url = 'https://www.marketwatch.com/tools/earningscalendar'
+
+    url = 'https://finance.yahoo.com/calendar/earnings/?day=' + monday
+
+    print(url)
+    
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -203,13 +242,11 @@ def analyze_stock_options(ticker):
 
     total_call_engagement = total_call_volume + total_call_open_interest
     total_put_engagement = total_put_volume + total_put_open_interest
-    sentiment = "Bullish" if total_call_engagement > total_put_engagement else "Bearish"
 
     # Return a dictionary with the aggregated and calculated options metrics
     return {
         "total_call_engagement": total_call_engagement,
         "total_put_engagement": total_put_engagement,
-        "sentiment": sentiment,
         "avg_call_implied_volatility": avg_call_implied_volatility,
         "avg_put_implied_volatility": avg_put_implied_volatility,
         "total_call_volume": total_call_volume,
@@ -234,6 +271,9 @@ def print_options_data(ticker, options_metrics, release_day):
 
     # Calculate the release date
     release_date = base_date + timedelta(days=release_day)
+    
+    if options_metrics['total_itm_calls'] == 0 and options_metrics['total_itm_puts'] == 0:
+        return
 
     print("===========================================")
     print(f"Options data for {ticker}:")
@@ -275,40 +315,6 @@ def plot_stock_history(ticker, start_date, end_date):
     plt.tick_params(axis='x', labelsize=8)
 
     plt.show()
-
-# Function to fetch stock price using yfinance
-def get_stock_price(ticker):
-    stock = yf.Ticker(ticker)
-    try:
-        stock_info = stock.info
-        price = stock_info.get('currentPrice')
-        return price
-    except ValueError as e:
-        print(f"Error retrieving info for {ticker}: {e}")
-        return None
-
-def process_earnings_table(ticker_data_list, table, threshold, index):
-    """
-    Process a single earnings table to extract ticker symbols, 
-    determine release status, fetch stock prices, and get earnings release dates.
-    """
-    df = pd.read_html(str(table))[0]
-    release_status = 'Yes' if index < threshold else 'No'
-
-    if 'Symbol' in df.columns:
-        # Assuming the release date column is named 'Release Date'
-        for _, row in df.iterrows():
-            ticker = row.get('Symbol')
-            if pd.notna(ticker):
-                price = get_stock_price(ticker)
-                ticker_data_list.append(pd.DataFrame({
-                    'Symbol': [ticker],
-                    'Stock Price': [price],
-                    'Released': [release_status],
-                    'Release Day': [index]
-                }))
-
-    return ticker_data_list
 
 def get_stock_data(ticker_symbol):
     # Create a Ticker object
