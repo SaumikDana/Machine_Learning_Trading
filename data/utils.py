@@ -241,19 +241,10 @@ def get_most_recent_monday():
     most_recent_monday = today - timedelta(days=days_to_subtract)
     return most_recent_monday
 
-def print_options_data(ticker, options_metrics, release_day):
-    # Get the most recent Monday as the base date
-    base_date = get_most_recent_monday()
-
-    # Calculate the release date
-    release_date = base_date + timedelta(days=release_day)
+def print_options_data(ticker, options_metrics):
     
     print("===========================================")
     print(f"Options data for {ticker}:")
-    if release_day != -1:
-        print(f"Earnings Released on {release_date.strftime('%b %d, %Y')}")
-
-    # print(f"Market Sentiment for {ticker} is leaning {options_metrics['sentiment']}.")
 
     print(f"Average IV for Calls: {options_metrics['avg_call_implied_volatility']}")
     print(f"Average IV for Puts: {options_metrics['avg_put_implied_volatility']}")
@@ -404,7 +395,7 @@ def get_stock_beta(stock_ticker, start_date, end_date):
 
     return beta_value
 
-def analyze_stock_performance_post_earnings(ticker, release_day, start_date, end_date):
+def analyze_stock_performance_post_earnings(ticker, release_date, start_date, end_date):
     """
     Analyze the stock performance by comparing the closing price on the day of the earnings release
     with the closing price on the following day.
@@ -419,11 +410,6 @@ def analyze_stock_performance_post_earnings(ticker, release_day, start_date, end
     # Fetch the stock data
     stock_data = get_stock_data(ticker, start_date, end_date)
 
-    # Get the most recent Monday as the base date
-    base_date = get_most_recent_monday()
-
-    # Calculate the release date and convert to datetime with timezone
-    release_date = base_date + timedelta(days=release_day)
     release_date = datetime(release_date.year, release_date.month, release_date.day)
     release_date = pytz.timezone('America/New_York').localize(release_date)
     
@@ -483,3 +469,20 @@ def plot_values_with_directions(values, directions, betas):
     plt.legend()
 
     plt.show()
+
+def analyze_ticker_options(filtered_tickers, ticker_data_sorted):
+    
+    for index, row in ticker_data_sorted.iterrows():
+        ticker = row['Symbol']
+        # Loop only over filtered tickers
+        if ticker not in filtered_tickers:
+            continue
+
+        stock = yf.Ticker(ticker)
+        exp_dates = stock.options
+
+        for date in exp_dates:
+            options_data = stock.option_chain(date)
+            call_options, put_options = options_data.calls, options_data.puts
+
+            analyze_options(ticker, call_options, put_options)
