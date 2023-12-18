@@ -262,24 +262,29 @@ def print_options_data(ticker, options_metrics):
     
     return
 
-def plot_stock_history(ticker, start_date, end_date):
+def plot_stock_history(ticker, start_date, end_date, release_date=None):
     stock = yf.Ticker(ticker)
     hist = stock.history(start=start_date, end=end_date)
 
     # Plotting the closing prices
     plt.figure(figsize=(3, 3))
     plt.plot(hist.index, hist['Close'], '-o', markersize=2)
-    plt.title(f"Stock Price History of {ticker}", fontsize=8)
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))  # Format as 'Month-Day'
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())  # Set major ticks to days
-    plt.xticks(rotation=45)  # Rotate for better readability
-    plt.xlabel('Date', fontsize=8)
-    plt.ylabel('Closing Price', fontsize=8)
+    plt.title(f"Stock Price History of {ticker}", fontsize=12)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.xticks(rotation=45)
+    plt.xlabel('Date', fontsize=10)
+    plt.ylabel('Closing Price', fontsize=10)
     plt.grid(True)
     plt.tick_params(axis='x', labelsize=8)
 
-    plt.show()
+    if release_date:
+        # Adding a vertical line at the release date
+        release_date_datetime = pd.to_datetime(release_date)
+        plt.axvline(x=release_date_datetime, color='red', linestyle='--', label='Release Date')
 
+    plt.show()
+    
 def get_stock_data(ticker_symbol):
     # Create a Ticker object
     stock = yf.Ticker(ticker_symbol)
