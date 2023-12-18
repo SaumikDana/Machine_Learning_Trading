@@ -272,9 +272,6 @@ def print_options_data(ticker, options_metrics, release_day):
     # Calculate the release date
     release_date = base_date + timedelta(days=release_day)
     
-    if options_metrics['total_itm_calls'] == 0 and options_metrics['total_itm_puts'] == 0:
-        return
-
     print("===========================================")
     print(f"Options data for {ticker}:")
     if release_day != -1:
