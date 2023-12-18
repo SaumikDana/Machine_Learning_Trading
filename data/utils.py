@@ -74,68 +74,44 @@ def get_stock_price(ticker):
         print(f"Error retrieving info for {ticker}: {e}")
         return None
 
-def process_earnings_table(ticker_data_list, table, threshold, index):
+def process_earnings_table(ticker_data_list, table):
     """
     Process a single earnings table to extract ticker symbols, 
-    determine release status, fetch stock prices, and get earnings release dates.
+    fetch stock prices, and get earnings release dates.
     """
     df = pd.read_html(str(table))[0]
-    release_status = 'Yes' if index < threshold else 'No'
-
+    
     if 'Symbol' in df.columns:
         # Assuming the release date column is named 'Release Date'
         for _, row in df.iterrows():
             ticker = row.get('Symbol')
             if pd.notna(ticker):
                 price = get_stock_price(ticker)
-                ticker_data_list.append(pd.DataFrame({
-                    'Symbol': [ticker],
-                    'Stock Price': [price],
-                    'Released': [release_status],
-                    'Release Day': [index]
-                }))
+                ticker_data_list.append(
+                    pd.DataFrame({'Symbol': [ticker], 'Stock Price': [price]})
+                )
 
     return ticker_data_list
 
-def scrape_and_process_marketwatch_data(monday):
-
-    # Set the timezone to Central Time
-    central_tz = pytz.timezone('America/Chicago')
-
-    # Get the current time in Central Time Zone
-    current_time_central = datetime.now(central_tz)
-
-    # Print the current time in Central Time to verify
-    print("Current time in Central Time Zone:", current_time_central)
-
-    # Get the current day of the week
-    current_day = current_time_central.weekday()
-
-    # Set the threshold based on the current day
-    threshold = max(0, current_day - 1)
+def scrape_and_process_yahoo_finance_data(day):
 
     # Scrape data from MarketWatch
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
-    # url = 'https://www.marketwatch.com/tools/earningscalendar'
-
-    url = 'https://finance.yahoo.com/calendar/earnings/?day=' + monday
-
-    print(url)
-    
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    # Find all tables in the webpage
-    tables = soup.find_all('table')
 
     # Initialize list to hold DataFrame objects
     ticker_data_list = []
 
-    # Process each table
-    for index, table in enumerate(tables):
-        if not table.find('tbody').find_all('tr'):
-            continue
-        ticker_data_list = process_earnings_table(ticker_data_list, table, threshold, index)
+    url = 'https://finance.yahoo.com/calendar/earnings/?day=' + day
+
+    print(url)
+        
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Find all tables in the webpage
+    table = soup.find_all('table')
+
+    ticker_data_list = process_earnings_table(ticker_data_list, table)
 
     # Concatenate all DataFrame objects into one DataFrame
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
