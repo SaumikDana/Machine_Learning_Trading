@@ -97,8 +97,12 @@ def scrape_and_process_yahoo_finance_data(url, ticker_data_list):
 
     # Scrape data from MarketWatch
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
-        
-    response = requests.get(url, headers=headers)
+    
+    try:
+        response = requests.get(url, headers=headers)
+    except:
+        return None, None
+
     soup = BeautifulSoup(response.content, 'html.parser')
 
     # Find all tables in the webpage
