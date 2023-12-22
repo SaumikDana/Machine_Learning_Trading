@@ -93,17 +93,10 @@ def process_earnings_table(ticker_data_list, table):
 
     return ticker_data_list
 
-def scrape_and_process_yahoo_finance_data(day):
+def scrape_and_process_yahoo_finance_data(url, ticker_data_list):
 
     # Scrape data from MarketWatch
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
-
-    # Initialize list to hold DataFrame objects
-    ticker_data_list = []
-
-    url = 'https://finance.yahoo.com/calendar/earnings/?day=' + day
-
-    print(url)
         
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -120,7 +113,7 @@ def scrape_and_process_yahoo_finance_data(day):
     ticker_data = ticker_data.dropna(subset=['Stock Price'])
     ticker_data_sorted = ticker_data.sort_values(by='Stock Price', ascending=False)
 
-    return ticker_data_sorted
+    return ticker_data_sorted, ticker_data_list
 
 def analyze_options(ticker, call_options, put_options):
     """
@@ -262,6 +255,8 @@ def print_options_data(ticker, options_metrics):
     
     return
 
+import matplotlib.ticker as mticker  # Importing the correct module
+
 def plot_stock_history(ticker, start_date, end_date, release_date=None):
     stock = yf.Ticker(ticker)
     hist = stock.history(start=start_date, end=end_date)
@@ -277,6 +272,9 @@ def plot_stock_history(ticker, start_date, end_date, release_date=None):
     plt.ylabel('Closing Price', fontsize=10)
     plt.grid(True)
     plt.tick_params(axis='x', labelsize=8)
+
+    # Set y-axis label format
+    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))
 
     if release_date:
         # Adding a vertical line at the release date
