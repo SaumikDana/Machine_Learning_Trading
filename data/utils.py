@@ -93,15 +93,12 @@ def process_earnings_table(ticker_data_list, table):
 
     return ticker_data_list
 
-def scrape_and_process_yahoo_finance_data(url, ticker_data_list):
+def scrape_and_process_yahoo_finance_data(url, ticker_data_list=[]):
 
     # Scrape data from MarketWatch
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
     
-    try:
-        response = requests.get(url, headers=headers)
-    except:
-        return None, None
+    response = requests.get(url, headers=headers)
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -275,7 +272,7 @@ def plot_stock_history(ticker, start_date, end_date, release_date=None):
     plt.xlabel('Date', fontsize=10)
     plt.ylabel('Closing Price', fontsize=10)
     plt.grid(True)
-    plt.tick_params(axis='x', labelsize=8)
+    plt.tick_params(axis='x', labelsize=6)
 
     # Set y-axis label format
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))
