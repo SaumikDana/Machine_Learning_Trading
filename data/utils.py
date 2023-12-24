@@ -227,6 +227,40 @@ def analyze_stock_options(ticker):
         "total_itm_puts": total_itm_puts
     }
 
+def calculate_oscillators(ticker, period='6mo'):
+    # Fetch historical stock data
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period=period)
+
+    # Calculate RSI
+    def calculate_RSI(series, period=14):
+        delta = series.diff().dropna()
+        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+        RS = gain / loss
+        return 100 - (100 / (1 + RS))
+
+    # Calculate MACD
+    def calculate_MACD(series, fast_period=12, slow_period=26, signal_period=9):
+        exp1 = series.ewm(span=fast_period, adjust=False).mean()
+        exp2 = series.ewm(span=slow_period, adjust=False).mean()
+        macd = exp1 - exp2
+        signal_line = macd.ewm(span=signal_period, adjust=False).mean()
+        return macd, signal_line
+
+    # RSI
+    hist['RSI'] = calculate_RSI(hist['Close'])
+
+    # MACD and Signal Line
+    macd, signal = calculate_MACD(hist['Close'])
+    hist['MACD'] = macd
+    hist['Signal_Line'] = signal
+
+    # Drop any NaN values from the dataframe
+    hist.dropna(inplace=True)
+
+    return hist[['Close', 'RSI', 'MACD', 'Signal_Line']]
+
 def get_most_recent_monday():
     today = datetime.now()
     # Calculate the number of days to subtract to get the most recent Monday
