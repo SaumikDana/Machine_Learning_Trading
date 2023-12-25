@@ -235,3 +235,75 @@ def analyze_ticker_options(filtered_tickers, ticker_data_sorted):
             call_options, put_options = options_data.calls, options_data.puts
 
             analyze_options(ticker, call_options, put_options)
+
+    return
+
+def calculate_and_plot_oscillators(ticker, start_date, end_date):
+    # Fetch historical data from Yahoo Finance
+    stock = yf.Ticker(ticker)
+    data = stock.history(start=start_date, end=end_date)
+    
+    # Check if 'Adj Close' column exists, if not use 'Close'
+    close_col = 'Adj Close' if 'Adj Close' in data.columns else 'Close'
+
+    if close_col not in data.columns:
+        raise ValueError(f"Expected column '{close_col}' not found in the data.")
+    
+    # Calculate RSI
+    delta = data[close_col].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
+    data['RSI'] = 100 - (100 / (1 + rs))
+    
+    # Calculate Stochastic Oscillator
+    low_min = data['Low'].rolling(window=14).min()
+    high_max = data['High'].rolling(window=14).max()
+    data['%K'] = (data[close_col] - low_min) * 100 / (high_max - low_min)
+    data['%D'] = data['%K'].rolling(window=3).mean()
+    
+    # Calculate MACD
+    exp1 = data[close_col].ewm(span=12, adjust=False).mean()
+    exp2 = data[close_col].ewm(span=26, adjust=False).mean()
+    data['MACD'] = exp1 - exp2
+    data['Signal line'] = data['MACD'].ewm(span=9, adjust=False).mean()
+    
+    # Calculate CCI
+    TP = (data['High'] + data['Low'] + data['Close']) / 3
+    data['CCI'] = (TP - TP.rolling(window=20).mean()) / (0.015 * TP.rolling(window=20).std())
+    
+    # Create subplots
+    fig, axs = plt.subplots(5, 1, figsize=(14, 10), sharex=True)
+    
+    # Plot Adjusted Close Price
+    axs[0].plot(data.index, data[close_col])
+    axs[0].set_title(f'{ticker} Adjusted Close Price')
+    
+    # Plot RSI
+    axs[1].plot(data.index, data['RSI'], color='purple')
+    axs[1].axhline(70, color='red', linestyle='--')
+    axs[1].axhline(30, color='green', linestyle='--')
+    axs[1].set_title('Relative Strength Index (RSI)')
+    
+    # Plot Stochastic Oscillator
+    axs[2].plot(data.index, data['%K'], label='%K', color='blue')
+    axs[2].plot(data.index, data['%D'], label='%D', color='orange')
+    axs[2].axhline(80, color='red', linestyle='--')
+    axs[2].axhline(20, color='green', linestyle='--')
+    axs[2].set_title('Stochastic Oscillator')
+    axs[2].legend()
+    
+    # Plot MACD
+    axs[3].plot(data.index, data['MACD'], label='MACD', color='blue')
+    axs[3].plot(data.index, data['Signal line'], label='Signal line', color='orange')
+    axs[3].set_title('Moving Average Convergence Divergence (MACD)')
+    axs[3].legend()
+    
+    # Plot CCI
+    axs[4].plot(data.index, data['CCI'], color='black')
+    axs[4].axhline(100, color='red', linestyle='--')
+    axs[4].axhline(-100, color='green', linestyle='--')
+    axs[4].set_title('Commodity Channel Index (CCI)')
+
+    plt.tight_layout()
+    plt.show()
