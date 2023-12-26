@@ -209,6 +209,10 @@ def print_options_data(ticker, options_metrics):
     return
 
 def plot_stock_history(ticker, start_date, end_date, release_date=None):
+    """ 
+    Plot stock History
+    """
+    
     stock = yf.Ticker(ticker)
     hist = stock.history(start=start_date, end=end_date)
 
