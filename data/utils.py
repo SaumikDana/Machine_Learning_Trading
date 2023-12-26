@@ -19,11 +19,14 @@ def get_stock_price(ticker):
         print(f"Error retrieving info for {ticker}: {e}")
         return None
 
-def process_earnings_table(ticker_data_list, table):
+def process_earnings_table(table, ticker_data_list=[]):
     """
     Process a single earnings table to extract ticker symbols, 
     fetch stock prices, and get earnings release dates.
     """
+    if table == None:
+        return ticker_data_list
+
     df = pd.read_html(str(table))[0]
     
     if 'Symbol' in df.columns:
@@ -38,19 +41,31 @@ def process_earnings_table(ticker_data_list, table):
 
     return ticker_data_list
 
-def scrape_and_process_yahoo_finance_data(url, ticker_data_list=[]):
-
-    # Scrape data from MarketWatch
-    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
+def extract_table(url):
     
-    response = requests.get(url, headers=headers)
+    # Scrape data from Yahoo Finance
+    
+    headers = {'user-agent': 'Mozilla/5.0'}
+    try:
+        # Send the GET request
+        response = requests.get(url, headers=headers)
+        # Parse the page content with BeautifulSoup
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Find all tables in the webpage
+        table = soup.find_all('table')
+        
+        # Check if there are any tables found
+        if not table:
+            return None
+        
+        # Further processing or return the tables
+        return table
 
-    soup = BeautifulSoup(response.content, 'html.parser')
+    except requests.RequestException as e:
+        return None
 
-    # Find all tables in the webpage
-    table = soup.find_all('table')
-
-    ticker_data_list = process_earnings_table(ticker_data_list, table)
+def convert_to_dataframe(ticker_data_list):
 
     # Concatenate all DataFrame objects into one DataFrame
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
@@ -59,7 +74,7 @@ def scrape_and_process_yahoo_finance_data(url, ticker_data_list=[]):
     ticker_data = ticker_data.dropna(subset=['Stock Price'])
     ticker_data_sorted = ticker_data.sort_values(by='Stock Price', ascending=False)
 
-    return ticker_data_sorted, ticker_data_list
+    return ticker_data_sorted
 
 def analyze_options(ticker, call_options, put_options):
     """
