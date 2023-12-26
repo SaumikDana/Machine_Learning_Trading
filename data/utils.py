@@ -65,7 +65,7 @@ def extract_table(url):
     except requests.RequestException as e:
         return None
 
-def convert_to_dataframe(ticker_data_list):
+def convert_to_dataframe(ticker_data_list, ticker_data_sorted=pd.DataFrame()):
 
     # Concatenate all DataFrame objects into one DataFrame
     ticker_data = pd.concat(ticker_data_list, ignore_index=True)
