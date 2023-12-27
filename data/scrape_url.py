@@ -5,22 +5,22 @@ from bs4 import BeautifulSoup
 
 # Scrape the Yahoo Finance Table
 
+# Function to fetch stock price using yfinance
+def get_stock_price(ticker):
+    stock = yf.Ticker(ticker)
+    try:
+        stock_info = stock.info
+        price = stock_info.get('currentPrice')
+        return price
+    except ValueError as e:
+        print(f"Error retrieving info for {ticker}: {e}")
+        return None
+
 def process_earnings_table(table, ticker_data_list=[]):
     """
     Process a single earnings table to extract ticker symbols, 
     fetch stock prices, and get earnings release dates.
     """
-
-    # Function to fetch stock price using yfinance
-    def get_stock_price(ticker):
-        stock = yf.Ticker(ticker)
-        try:
-            stock_info = stock.info
-            price = stock_info.get('currentPrice')
-            return price
-        except ValueError as e:
-            print(f"Error retrieving info for {ticker}: {e}")
-            return None
 
     if table == None:
         return ticker_data_list
