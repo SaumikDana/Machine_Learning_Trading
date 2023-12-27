@@ -2,9 +2,111 @@ import matplotlib.pyplot as plt
 import yfinance as yf  
 import matplotlib.dates as mdates
 import pandas as pd
-import matplotlib.ticker as mticker  
+import matplotlib.ticker as mticker
+import numpy as np  
+from scrape_url import get_stock_price
 
 # Specific Stock Analysis
+
+def stock_tracker(ticker_symbol):
+    
+    # Define the function to fetch the historical stock prices for the day
+    def get_todays_prices(ticker_symbol):
+        try:
+            ticker = yf.Ticker(ticker_symbol)
+            # Use interval='1m' for minute-level data during market hours
+            todays_data = ticker.history(period='1d', interval='1m')
+            print(f"Data fetched for {ticker_symbol}, entries: {len(todays_data)}")
+            return todays_data
+        except Exception as e:
+            print(f"Error fetching historical prices: {e}")
+            return None
+
+    # Fetch historical prices for today
+    todays_prices = get_todays_prices(ticker_symbol)
+
+    # Plotting the closing prices
+    plt.figure(figsize=(3, 3))
+    plt.plot(todays_prices.index, todays_prices['Close'])
+    plt.title(f"Todays Stock Price of {ticker_symbol}", fontsize=12)
+    plt.xticks(rotation=45)
+    plt.xlabel('Time', fontsize=10)
+    plt.ylabel('Price', fontsize=10)
+    plt.grid(True)
+    plt.tick_params(axis='x', labelsize=6)
+
+    # Set y-axis label format
+    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))
+        
+    plt.show()
+
+def simulate_stock_price(
+    ticker, 
+    options_metrics,
+    time_periods=100
+):
+
+    average_iv_calls = options_metrics["avg_call_implied_volatility"]
+    average_iv_puts = options_metrics["avg_put_implied_volatility"]
+    total_call_volume = options_metrics["total_call_volume"]
+    total_put_volume = options_metrics["total_put_volume"]
+
+    # Convert annual IV to a daily scale
+    daily_iv_calls = average_iv_calls / np.sqrt(252)
+    daily_iv_puts = average_iv_puts / np.sqrt(252)
+
+    # Fetch the current price or fall back to a default value
+    initial_price = get_stock_price(ticker) or 100
+
+    # Calculate the weighted average IV based on call and put volumes
+    total_volume = total_call_volume + total_put_volume
+    call_weight = total_call_volume / total_volume
+    put_weight = total_put_volume / total_volume
+    weighted_iv = daily_iv_calls * call_weight + daily_iv_puts * put_weight
+
+    # Initialize the list of prices with the initial price
+    combined_prices = [initial_price]
+
+    # Set the random seed for reproducibility
+    np.random.seed(42)
+
+    # Simulate the time series for the stock price
+    for _ in range(1, time_periods):
+        if np.random.rand() < call_weight:
+            # Simulate the daily return for a bullish trend
+            daily_return = np.random.normal(loc=daily_iv_calls * 0.1, scale=weighted_iv)
+        else:
+            # Simulate the daily return for a bearish trend
+            daily_return = np.random.normal(loc=-daily_iv_puts * 0.1, scale=weighted_iv)
+        new_price = max(combined_prices[-1] * (1 + daily_return), 0)
+        combined_prices.append(new_price)
+
+    # Plot the simulated stock price trend
+    plt.figure(figsize=(3, 3))
+    plt.plot(combined_prices, color='blue')
+    plt.title(f'Combined IV Trend for {ticker}')
+    plt.xlabel('Time Periods')
+    plt.ylabel('Price')
+    plt.grid(True)
+    # Set the y-axis labels to one decimal place
+    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))    
+    plt.show()
+
+def get_info(ticker, options_metrics, start_date, end_date):
+    
+    # Print 
+    print_options_data(ticker, options_metrics)
+    
+    # Call the plot_stock_history method
+    plot_stock_history(ticker, start_date, end_date)
+
+    # Simulate based on Options Info:
+    simulate_stock_price(ticker, options_metrics)
+
+    # Todays Stock Prices
+    stock_tracker(ticker)
+    
+    return
 
 def analyze_stock_options(ticker):
     # Fetch the stock data using the provided ticker symbol
