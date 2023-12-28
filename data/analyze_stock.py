@@ -31,7 +31,7 @@ def stock_tracker(ticker_symbol):
     plt.figure(figsize=(3, 3))
     plt.plot(times, todays_prices['Close'])
     plt.title(f"Todays Stock Price of {ticker_symbol}", fontsize=12)
-    plt.xticks(times[::15], rotation=45)
+    plt.xticks(times[::20], rotation=45)
     plt.xlabel('Time', fontsize=10)
     plt.ylabel('Price', fontsize=10)
     plt.grid(True)
