@@ -3,6 +3,7 @@ import yfinance as yf
 import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.ticker as mticker
+from datetime import datetime
 
 # Specific Stock Analysis
 
@@ -22,12 +23,15 @@ def stock_tracker(ticker_symbol):
 
     # Fetch historical prices for today
     todays_prices = get_todays_prices(ticker_symbol)
-
+    
+    # Convert the strings to datetime objects and format to extract just the time
+    times = [ts.strftime('%H:%M') for ts in todays_prices.index]
+        
     # Plotting the closing prices
     plt.figure(figsize=(3, 3))
-    plt.plot(todays_prices.index, todays_prices['Close'])
+    plt.plot(times, todays_prices['Close'])
     plt.title(f"Todays Stock Price of {ticker_symbol}", fontsize=12)
-    plt.xticks(rotation=45)
+    plt.xticks(times[::15], rotation=45)
     plt.xlabel('Time', fontsize=10)
     plt.ylabel('Price', fontsize=10)
     plt.grid(True)
