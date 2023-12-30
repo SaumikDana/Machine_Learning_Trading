@@ -82,4 +82,10 @@ Machine_Learning_Trading/
 
 <img width="753" alt="strategy" src="https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/3933ff9f-4370-40f2-ab62-dc8a73cbf945">
 
+## Concomitant Focus Areas
 
+- Practical Trading Algorithms: Linear regression, decision trees, and neural networks, tailored to predict market movements and analyze financial data.
+- Time Series Analysis: Specialized notebooks on time series models such as ARIMA and GARCH provide insights into handling and forecasting sequential data, crucial for market trend analysis.
+- Unsupervised Learning Techniques: Exploration of complex financial datasets with unsupervised learning methods like PCA, uncovering hidden structures and reducing dimensionality for better insights.
+- Alpha Factor Research: Investigation of alpha factors and feature engineering to create predictive signals and enhance trading strategies.
+- Real-World Data: Engagement with real-world datasets including stock prices, earnings releases, and economic indicators to practice and apply learned concepts.
