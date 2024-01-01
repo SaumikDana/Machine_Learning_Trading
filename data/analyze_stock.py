@@ -3,7 +3,47 @@ import yfinance as yf
 import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.ticker as mticker
-from datetime import datetime
+import numpy as np
+import scipy.stats as si
+
+# Define Black-Scholes formula for European call and put options
+def black_scholes_call(S, K, T, r, sigma):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    return (S * si.norm.cdf(d1, 0.0, 1.0) - K * np.exp(-r * T) * si.norm.cdf(d2, 0.0, 1.0))
+
+def black_scholes_put(S, K, T, r, sigma):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    return (K * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0) - S * si.norm.cdf(-d1, 0.0, 1.0))
+
+def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
+
+    stock = yf.Ticker(ticker_symbol)
+
+    # Fetch options data and calculate Black-Scholes theoretical prices
+    exp_dates = stock.options
+    S = stock.info['regularMarketPrice']
+    call_bs_prices, put_bs_prices = [], []
+
+    for date in exp_dates:
+        options_data = stock.option_chain(date)
+        call_options, put_options = options_data.calls, options_data.puts
+        T = (pd.to_datetime(date) - pd.Timestamp.now()).days / 365
+
+        for _, call_row in call_options.iterrows():
+            sigma = call_row['impliedVolatility']
+            K = call_row['strike']
+            call_bs_prices.append(black_scholes_call(S, K, T, risk_free_rate, sigma))
+
+        for _, put_row in put_options.iterrows():
+            sigma = put_row['impliedVolatility']
+            K = put_row['strike']
+            put_bs_prices.append(black_scholes_put(S, K, T, risk_free_rate, sigma))
+
+    # Display Black-Scholes theoretical prices
+    print("Theoretical Call Prices based on Black-Scholes: ", call_bs_prices)
+    print("Theoretical Put Prices based on Black-Scholes: ", put_bs_prices)
 
 # Specific Stock Analysis
 
