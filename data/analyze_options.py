@@ -61,21 +61,27 @@ def put_greeks(S, K, T, r, sigma):
     rho = -K * T * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0)
     return {'delta': delta, 'gamma': gamma, 'theta': theta, 'vega': vega, 'rho': rho}
 
-# Plotting Function
 def plot_greeks_and_prices(dates, call_bs_prices, greeks_data):
-    plt.figure(figsize=(15, 7))
+    plt.figure(figsize=(4, 4))
     plt.plot(dates, call_bs_prices, label='Theoretical Price', color='green')
+    
     for greek, values in greeks_data.items():
         plt.plot(dates, values, label=greek.capitalize())
-    plt.xlabel('Date')
-    plt.ylabel('Values')
-    plt.title('Theoretical Prices and Greeks over Time')
-    plt.legend()
+    
+    plt.title('Theoretical Prices & Greeks v Time', fontsize='small')
+    plt.legend(loc='best', fontsize='x-small', frameon=False)
+
     plt.grid(True)
+    
+    # Rotate and set font size for the x and y ticks
+    plt.xticks(rotation=45, fontsize='x-small')
+    plt.yticks(fontsize='x-small')
+    
     plt.show()
 
 # Main Analysis Function
 def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
+    
     stock = yf.Ticker(ticker_symbol)
     exp_dates = stock.options
     stock_info = stock.info
@@ -91,7 +97,10 @@ def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
         call_options = options_data.calls
         T = (pd.to_datetime(date) - pd.Timestamp.now()).days / 365
         dates.append(pd.to_datetime(date))
-        for _, call_row in call_options.iterrows():
+
+        # Select a specific call option for each date, e.g., the option with the closest strike price to the current price
+        selected_option = call_options.iloc[(call_options['strike'] - S).abs().argsort()[:1]]
+        for _, call_row in selected_option.iterrows():
             K = call_row['strike']
             sigma = call_row['impliedVolatility']
             price = black_scholes_call(S, K, T, risk_free_rate, sigma)
@@ -108,7 +117,11 @@ def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
             aligned_dates.append(date)
             aligned_call_bs_prices.append(price)
 
-    # Now call the plot function with aligned data
-    plot_greeks_and_prices(aligned_dates, aligned_call_bs_prices, greeks_data)
+    # Check if data is aligned
+    data_is_aligned = all(len(values) == len(aligned_dates) for values in greeks_data.values())
 
-    return
+    # If everything is aligned, proceed to plot
+    if data_is_aligned and len(aligned_dates) == len(aligned_call_bs_prices):
+        plot_greeks_and_prices(aligned_dates, aligned_call_bs_prices, greeks_data)
+    else:
+        print("Data is not aligned. Cannot plot.")
