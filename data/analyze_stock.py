@@ -8,11 +8,19 @@ import scipy.stats as si
 
 # Define Black-Scholes formula for European call and put options
 def black_scholes_call(S, K, T, r, sigma):
+    # Ensure sigma and T are not zero to avoid divide by zero issues
+    sigma = max(sigma, 0.0001)  # Replace 0.0001 with an appropriate minimum volatility
+    T = max(T, 1/(365*24*60))  # Assume at least one minute to expiration
+
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return (S * si.norm.cdf(d1, 0.0, 1.0) - K * np.exp(-r * T) * si.norm.cdf(d2, 0.0, 1.0))
 
 def black_scholes_put(S, K, T, r, sigma):
+    # Ensure sigma and T are not zero to avoid divide by zero issues
+    sigma = max(sigma, 0.0001)  # Replace 0.0001 with an appropriate minimum volatility
+    T = max(T, 1/(365*24*60))  # Assume at least one minute to expiration
+
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return (K * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0) - S * si.norm.cdf(-d1, 0.0, 1.0))
@@ -23,9 +31,14 @@ def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
 
     # Fetch options data and calculate Black-Scholes theoretical prices
     exp_dates = stock.options
-    S = stock.info['regularMarketPrice']
-    call_bs_prices, put_bs_prices = [], []
+    stock_info = stock.info
 
+    # Fallback mechanism for fetching the current stock price
+    S = stock_info.get('currentPrice', stock_info.get('previousClose', None))
+    if S is None:
+        raise ValueError(f"No current price data available for {ticker_symbol}")
+
+    call_bs_prices, put_bs_prices = [], []
     for date in exp_dates:
         options_data = stock.option_chain(date)
         call_options, put_options = options_data.calls, options_data.puts
@@ -41,7 +54,6 @@ def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
             K = put_row['strike']
             put_bs_prices.append(black_scholes_put(S, K, T, risk_free_rate, sigma))
 
-    # Display Black-Scholes theoretical prices
     print("Theoretical Call Prices based on Black-Scholes: ", call_bs_prices)
     print("Theoretical Put Prices based on Black-Scholes: ", put_bs_prices)
 
