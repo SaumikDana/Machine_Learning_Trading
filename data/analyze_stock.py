@@ -6,56 +6,86 @@ import matplotlib.ticker as mticker
 import numpy as np
 import scipy.stats as si
 
-# Define Black-Scholes formula for European call and put options
+# Black-Scholes Call Price Calculation
 def black_scholes_call(S, K, T, r, sigma):
-    # Ensure sigma and T are not zero to avoid divide by zero issues
-    sigma = max(sigma, 0.0001)  # Replace 0.0001 with an appropriate minimum volatility
-    T = max(T, 1/(365*24*60))  # Assume at least one minute to expiration
-
+    sigma = max(sigma, 0.0001)
+    T = max(T, 1/(365*24*60))
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return (S * si.norm.cdf(d1, 0.0, 1.0) - K * np.exp(-r * T) * si.norm.cdf(d2, 0.0, 1.0))
 
+# Black-Scholes Put Price Calculation
 def black_scholes_put(S, K, T, r, sigma):
-    # Ensure sigma and T are not zero to avoid divide by zero issues
-    sigma = max(sigma, 0.0001)  # Replace 0.0001 with an appropriate minimum volatility
-    T = max(T, 1/(365*24*60))  # Assume at least one minute to expiration
-
+    sigma = max(sigma, 0.0001)
+    T = max(T, 1/(365*24*60))
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return (K * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0) - S * si.norm.cdf(-d1, 0.0, 1.0))
 
+# Calculate Greeks for Call Option
+def call_greeks(S, K, T, r, sigma):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    delta = si.norm.cdf(d1, 0.0, 1.0)
+    gamma = si.norm.pdf(d1, 0.0, 1.0) / (S * sigma * np.sqrt(T))
+    theta = -((S * si.norm.pdf(d1, 0.0, 1.0) * sigma) / (2 * np.sqrt(T))) - r * K * np.exp(-r * T) * si.norm.cdf(d2, 0.0, 1.0)
+    vega = S * si.norm.pdf(d1, 0.0, 1.0) * np.sqrt(T)
+    rho = K * T * np.exp(-r * T) * si.norm.cdf(d2, 0.0, 1.0)
+    return {'delta': delta, 'gamma': gamma, 'theta': theta, 'vega': vega, 'rho': rho}
+
+# Calculate Greeks for Put Option
+def put_greeks(S, K, T, r, sigma):
+    d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    delta = -si.norm.cdf(-d1, 0.0, 1.0)
+    gamma = si.norm.pdf(d1, 0.0, 1.0) / (S * sigma * np.sqrt(T))
+    theta = -((S * si.norm.pdf(d1, 0.0, 1.0) * sigma) / (2 * np.sqrt(T))) + r * K * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0)
+    vega = S * si.norm.pdf(d1, 0.0, 1.0) * np.sqrt(T)
+    rho = -K * T * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0)
+    return {'delta': delta, 'gamma': gamma, 'theta': theta, 'vega': vega, 'rho': rho}
+
+# Plotting Function
+def plot_greeks_and_prices(dates, call_bs_prices, greeks_data):
+    plt.figure(figsize=(15, 7))
+    plt.plot(dates, call_bs_prices, label='Theoretical Price', color='green')
+    for greek, values in greeks_data.items():
+        plt.plot(dates, values, label=greek.capitalize())
+    plt.xlabel('Date')
+    plt.ylabel('Values')
+    plt.title('Theoretical Prices and Greeks over Time')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+# Main Analysis Function
 def analyze_and_plot_stock_options(ticker_symbol, risk_free_rate=0.01):
-
     stock = yf.Ticker(ticker_symbol)
-
-    # Fetch options data and calculate Black-Scholes theoretical prices
     exp_dates = stock.options
     stock_info = stock.info
-
-    # Fallback mechanism for fetching the current stock price
     S = stock_info.get('currentPrice', stock_info.get('previousClose', None))
     if S is None:
-        raise ValueError(f"No current price data available for {ticker_symbol}")
+        raise ValueError("No current price data available.")
 
-    call_bs_prices, put_bs_prices = [], []
+    call_bs_prices, put_bs_prices, dates = [], [], []
+    greeks_data = {'delta': [], 'gamma': [], 'theta': [], 'vega': [], 'rho': []}
+
     for date in exp_dates:
         options_data = stock.option_chain(date)
-        call_options, put_options = options_data.calls, options_data.puts
+        call_options = options_data.calls
         T = (pd.to_datetime(date) - pd.Timestamp.now()).days / 365
-
+        dates.append(pd.to_datetime(date))
         for _, call_row in call_options.iterrows():
-            sigma = call_row['impliedVolatility']
             K = call_row['strike']
-            call_bs_prices.append(black_scholes_call(S, K, T, risk_free_rate, sigma))
+            sigma = call_row['impliedVolatility']
+            price = black_scholes_call(S, K, T, risk_free_rate, sigma)
+            call_bs_prices.append(price)
+            greeks = call_greeks(S, K, T, risk_free_rate, sigma)
+            for key in greeks:
+                greeks_data[key].append(greeks[key])
 
-        for _, put_row in put_options.iterrows():
-            sigma = put_row['impliedVolatility']
-            K = put_row['strike']
-            put_bs_prices.append(black_scholes_put(S, K, T, risk_free_rate, sigma))
+    plot_greeks_and_prices(dates, call_bs_prices, greeks_data)
 
-    print("Theoretical Call Prices based on Black-Scholes: ", call_bs_prices)
-    print("Theoretical Put Prices based on Black-Scholes: ", put_bs_prices)
+    return
 
 # Specific Stock Analysis
 
