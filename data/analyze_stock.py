@@ -6,13 +6,10 @@ import matplotlib.ticker as mticker
 
 # Specific Stock Analysis
 
-def stock_tracker(ticker_symbol):
-    
-    # Define the function to fetch the historical stock prices for the day
+def stock_tracker(ticker_symbol, subplot_position):
     def get_todays_prices(ticker_symbol):
         try:
             ticker = yf.Ticker(ticker_symbol)
-            # Use interval='1m' for minute-level data during market hours
             todays_data = ticker.history(period='1d', interval='1m')
             print(f"Data fetched for {ticker_symbol}, entries: {len(todays_data)}")
             return todays_data
@@ -20,25 +17,43 @@ def stock_tracker(ticker_symbol):
             print(f"Error fetching historical prices: {e}")
             return None
 
-    # Fetch historical prices for today
     todays_prices = get_todays_prices(ticker_symbol)
-    
-    # Convert the strings to datetime objects and format to extract just the time
     times = [ts.strftime('%H:%M') for ts in todays_prices.index]
-        
-    # Plotting the closing prices
-    plt.figure(figsize=(3, 3))
+    
+    plt.subplot(1, 2, subplot_position)
     plt.plot(times, todays_prices['Close'])
-    plt.title(f"Todays Stock Price of {ticker_symbol}", fontsize=12)
+    plt.title(f"Today's Stock Price of {ticker_symbol}", fontsize='small')
     plt.xticks(times[::20], rotation=45)
-    plt.xlabel('Time', fontsize=10)
-    plt.ylabel('Price', fontsize=10)
+    plt.yticks(fontsize='small')
+    plt.xlabel('Time', fontsize='small')
+    plt.ylabel('Price', fontsize='small')
     plt.grid(True)
     plt.tick_params(axis='x', labelsize=6)
+    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
 
-    # Set y-axis label format
-    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))
-        
+def plot_stock_history(ticker_symbol, start_date, end_date):
+    # Adjust the overall plot size
+    plt.figure(figsize=(10, 4))
+    
+    # First plot: Today's prices
+    stock_tracker(ticker_symbol, 1)
+
+    stock = yf.Ticker(ticker_symbol)
+    hist = stock.history(start=start_date, end=end_date)
+
+    plt.subplot(1, 2, 2)
+    plt.plot(hist.index, hist['Close'], '-o', markersize=2)
+    plt.title(f"Stock Price History of {ticker_symbol}", fontsize='small')
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.xticks(rotation=45)
+    plt.yticks(fontsize='small')
+    plt.xlabel('Date', fontsize='small')
+    plt.ylabel('Closing Price', fontsize='small')
+    plt.grid(True)
+    plt.tick_params(axis='x', labelsize=6)
+    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
+    
     plt.show()
 
 def get_info(ticker, options_metrics, start_date, end_date):
@@ -48,9 +63,6 @@ def get_info(ticker, options_metrics, start_date, end_date):
     
     # Call the plot_stock_history method
     plot_stock_history(ticker, start_date, end_date)
-
-    # Todays Stock Prices
-    stock_tracker(ticker)
     
     return
 
@@ -132,37 +144,5 @@ def print_options_data(ticker, options_metrics):
 
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
-    
-    return
-
-def plot_stock_history(ticker, start_date, end_date, release_date=None):
-    """ 
-    Plot stock History
-    """
-    
-    stock = yf.Ticker(ticker)
-    hist = stock.history(start=start_date, end=end_date)
-
-    # Plotting the closing prices
-    plt.figure(figsize=(3, 3))
-    plt.plot(hist.index, hist['Close'], '-o', markersize=2)
-    plt.title(f"Stock Price History of {ticker}", fontsize=12)
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.xticks(rotation=45)
-    plt.xlabel('Date', fontsize=10)
-    plt.ylabel('Closing Price', fontsize=10)
-    plt.grid(True)
-    plt.tick_params(axis='x', labelsize=6)
-
-    # Set y-axis label format
-    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))
-
-    if release_date:
-        # Adding a vertical line at the release date
-        release_date_datetime = pd.to_datetime(release_date)
-        plt.axvline(x=release_date_datetime, color='red', linestyle='--', label='Release Date')
-
-    plt.show()
     
     return

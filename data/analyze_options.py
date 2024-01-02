@@ -76,8 +76,12 @@ def put_greeks(S, K, T, r, sigma):
     return {'delta': delta, 'gamma': gamma, 'theta': theta, 'vega': vega, 'rho': rho}
 
 # Function to plot Greeks and prices for options
-def plot_greeks_and_prices(dates, bs_prices, greeks_data, option_type='Option'):
-    plt.figure(figsize=(4, 4))
+def plot_greeks_and_prices(dates, bs_prices, greeks_data, option_type='Option', subplot=None):
+    if subplot is not None:
+        plt.subplot(subplot)
+    else:
+        plt.figure(figsize=(10, 4))
+    
     # Plotting the theoretical prices
     plt.plot(dates, bs_prices, label='Theoretical Price', color='green')
     
@@ -86,100 +90,78 @@ def plot_greeks_and_prices(dates, bs_prices, greeks_data, option_type='Option'):
         plt.plot(dates, values, label=greek.capitalize())
     
     # Setting the plot title and labels
-    plt.title(f'{option_type} Theoretical Prices & Greeks v Time', fontsize='small')
-    plt.legend(loc='best', fontsize='x-small', frameon=False)
+    plt.title(f'{option_type} Prices & Greeks v Time')
+    plt.legend(loc='best',frameon=False, fontsize='small')
     plt.grid(True)
-    plt.xticks(rotation=45, fontsize='x-small')
-    plt.yticks(fontsize='x-small')
-    plt.show()
+    plt.xticks(rotation=45, fontsize='small')
+    plt.yticks(fontsize='small')
 
 # Main function to analyze and plot Greeks for a given stock ticker
 def analyze_and_plot_greeks(ticker_symbol, risk_free_rate=0.01):
-    # Fetching data using yfinance for the given ticker symbol
     stock = yf.Ticker(ticker_symbol)
-    exp_dates = stock.options  # Expiry dates for the options
-    stock_info = stock.info  # Information about the stock
+    exp_dates = stock.options
+    stock_info = stock.info
     S = stock_info.get('currentPrice', stock_info.get('previousClose', None))
     if S is None:
         raise ValueError("No current price data available.")
 
-    # Initializing lists to store calculated data
     call_bs_prices, put_bs_prices, dates = [], [], []
     call_greeks_data = {'delta': [], 'gamma': [], 'theta': [], 'vega': [], 'rho': []}
     put_greeks_data = {'delta': [], 'gamma': [], 'theta': [], 'vega': [], 'rho': []}
 
-    # Iterating over all expiry dates to calculate prices and Greeks
     for date in exp_dates:
-        # Fetching option chain data for each expiry date
         options_data = stock.option_chain(date)
-        call_options = options_data.calls  # Extracting call options data
-        put_options = options_data.puts  # Extracting put options data
+        call_options = options_data.calls
+        put_options = options_data.puts
 
-        # Calculating time to expiration in years
         T = (pd.to_datetime(date) - pd.Timestamp.now()).days / 365
-        dates.append(pd.to_datetime(date))  # Storing the expiration date for plotting later
+        dates.append(pd.to_datetime(date))
 
-        # Analyzing call options for the nearest strike
-        # Selecting the call option with the strike price closest to the current stock price
         selected_call_option = call_options.iloc[(call_options['strike'] - S).abs().argsort()[:1]]
-        for _, call_row in selected_call_option.iterrows():  # Iterating through the selected call options
-            K = call_row['strike']  # Strike price of the call option
-            sigma = call_row['impliedVolatility']  # Implied volatility of the option
-            # Calculating the theoretical price of the call option using Black-Scholes model
+        for _, call_row in selected_call_option.iterrows():
+            K = call_row['strike']
+            sigma = call_row['impliedVolatility']
             price = black_scholes_call(S, K, T, risk_free_rate, sigma)
-            call_bs_prices.append(price)  # Storing the calculated price
-            
-            # Calculating Greeks for the call option
+            call_bs_prices.append(price)
             call_greeks_result = call_greeks(S, K, T, risk_free_rate, sigma)
             for key in call_greeks_result:
-                call_greeks_data[key].append(call_greeks_result[key])  # Storing the Greeks data
+                call_greeks_data[key].append(call_greeks_result[key])
 
-        # Analyzing put options for the nearest strike
-        # Selecting the put option with the strike price closest to the current stock price
         selected_put_option = put_options.iloc[(put_options['strike'] - S).abs().argsort()[:1]]
-        for _, put_row in selected_put_option.iterrows():  # Iterating through the selected put options
-            K = put_row['strike']  # Strike price of the put option
-            sigma = put_row['impliedVolatility']  # Implied volatility of the option
-            # Calculating the theoretical price of the put option using Black-Scholes model
+        for _, put_row in selected_put_option.iterrows():
+            K = put_row['strike']
+            sigma = put_row['impliedVolatility']
             put_price = black_scholes_put(S, K, T, risk_free_rate, sigma)
-            put_bs_prices.append(put_price)  # Storing the calculated price
-            
-            # Calculating Greeks for the put option
+            put_bs_prices.append(put_price)
             put_greeks_result = put_greeks(S, K, T, risk_free_rate, sigma)
             for key in put_greeks_result:
-                put_greeks_data[key].append(put_greeks_result[key])  # Storing the Greeks data
+                put_greeks_data[key].append(put_greeks_result[key])
 
-    # Aligning data for plotting call options
     aligned_call_dates, aligned_call_bs_prices = [], []
     for date, price in zip(dates, call_bs_prices):
-        # Ensure the price is a number (not NaN) before aligning
         if not np.isnan(price):
             aligned_call_dates.append(date)
             aligned_call_bs_prices.append(price)
-
-    # Checking if data lengths match for plotting
     call_data_is_aligned = all(len(values) == len(aligned_call_dates) for values in call_greeks_data.values())
 
-    # Aligning data for plotting put options
     aligned_put_dates, aligned_put_bs_prices = [], []
     for date, price in zip(dates, put_bs_prices):
-        # Ensure the price is a number (not NaN) before aligning
         if not np.isnan(price):
             aligned_put_dates.append(date)
             aligned_put_bs_prices.append(price)
-
-    # Checking if data lengths match for plotting
     put_data_is_aligned = all(len(values) == len(aligned_put_dates) for values in put_greeks_data.values())
 
-    # Plotting the results if data is aligned
+    plt.figure(figsize=(10, 4))
+    
     if call_data_is_aligned and len(aligned_call_dates) == len(aligned_call_bs_prices):
-        # If call data is properly aligned, plot theoretical prices and Greeks
-        plot_greeks_and_prices(aligned_call_dates, aligned_call_bs_prices, call_greeks_data, 'Call Option')
+        plot_greeks_and_prices(aligned_call_dates, aligned_call_bs_prices, call_greeks_data, 'Call Option', 121)
     else:
         print("Call data is not aligned. Cannot plot.")
 
     if put_data_is_aligned and len(aligned_put_dates) == len(aligned_put_bs_prices):
-        # If put data is properly aligned, plot theoretical prices and Greeks
-        plot_greeks_and_prices(aligned_put_dates, aligned_put_bs_prices, put_greeks_data, 'Put Option')
+        plot_greeks_and_prices(aligned_put_dates, aligned_put_bs_prices, put_greeks_data, 'Put Option', 122)
     else:
         print("Put data is not aligned. Cannot plot.")
+
+    plt.tight_layout()
+    plt.show()
