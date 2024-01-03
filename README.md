@@ -80,7 +80,8 @@ Machine_Learning_Trading/
 
 ## /data/
 
-<img width="753" alt="strategy" src="https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/3933ff9f-4370-40f2-ab62-dc8a73cbf945">
+![strategy](https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/2a1de833-3538-4193-9892-df2ad5f29bfd)
+
 
 ## Concomitant Focus Areas
 
