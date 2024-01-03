@@ -3,9 +3,54 @@ import yfinance as yf
 import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.ticker as mticker
+from datetime import datetime, timedelta
 
 # Specific Stock Analysis
 
+def print_info_keys(ticker_symbol):
+    stock = yf.Ticker(ticker_symbol)
+    try:
+        stock_info_keys = stock.info.keys()
+        print(f"Keys in stock.info for {ticker_symbol}:")
+        for key in stock_info_keys:
+            print(key)
+    except Exception as e:
+        print(f"Error retrieving info for {ticker_symbol}: {e}")
+
+# Function to fetch historical financial ratios
+def get_financial_ratios(ticker_symbol, start_date, end_date):
+    stock = yf.Ticker(ticker_symbol)
+    hist = stock.history(start=start_date, end=end_date)
+
+    # Use trailing EPS to calculate P/E ratio if available
+    if 'trailingEps' in stock.info:
+        trailing_eps = stock.info['trailingEps']
+        hist['P/E'] = hist['Close'] / trailing_eps
+
+    # Other calculations could follow a similar pattern if the data were available
+    
+    return hist
+
+# Function to plot the P/E ratio time series
+def plot_pe_ratio(ticker_symbol, date):
+    start_date = date - timedelta(days=365)  # Approximately 1 year back
+    end_date = date  # Up to the current date
+
+    hist = get_financial_ratios(ticker_symbol, start_date, end_date)
+
+    if 'P/E' in hist.columns:
+        plt.figure(figsize=(10, 5))
+        plt.plot(hist.index, hist['P/E'], '-o', markersize=2, label='P/E')
+        plt.title(f"P/E Ratio History of {ticker_symbol}")
+        plt.xlabel('Date')
+        plt.ylabel('P/E Ratio')
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+        plt.xticks(rotation=45)
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+    
 def stock_tracker(ticker_symbol, subplot_position):
     def get_todays_prices(ticker_symbol):
         try:
