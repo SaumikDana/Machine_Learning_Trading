@@ -75,28 +75,23 @@ def put_greeks(S, K, T, r, sigma):
     rho = -K * T * np.exp(-r * T) * si.norm.cdf(-d2, 0.0, 1.0)
     return {'delta': delta, 'gamma': gamma, 'theta': theta, 'vega': vega, 'rho': rho}
 
-# Function to plot Greeks and prices for options
-def plot_greeks_and_prices(dates, bs_prices, greeks_data, option_type='Option', subplot=None):
+def plot_selected_greeks(dates, greeks_data, selected_greeks, title, subplot=None):
     if subplot is not None:
         plt.subplot(subplot)
     else:
         plt.figure(figsize=(10, 4))
     
-    # Plotting the theoretical prices
-    plt.plot(dates, bs_prices, label='Theoretical Price', color='green')
-    
-    # Plotting each of the Greeks over time
-    for greek, values in greeks_data.items():
-        plt.plot(dates, values, label=greek.capitalize())
+    # Plotting the selected Greeks over time
+    for greek in selected_greeks:
+        plt.plot(dates, greeks_data[greek], label=greek.capitalize())
     
     # Setting the plot title and labels
-    plt.title(f'{option_type} Prices & Greeks v Time')
-    plt.legend(loc='best',frameon=False, fontsize='small')
+    plt.title(title)
+    plt.legend(loc='best', frameon=False, fontsize='small')
     plt.grid(True)
     plt.xticks(rotation=45, fontsize='small')
     plt.yticks(fontsize='small')
 
-# Main function to analyze and plot Greeks for a given stock ticker
 def analyze_and_plot_greeks(ticker_symbol, risk_free_rate=0.01):
     stock = yf.Ticker(ticker_symbol)
     exp_dates = stock.options
@@ -151,17 +146,21 @@ def analyze_and_plot_greeks(ticker_symbol, risk_free_rate=0.01):
             aligned_put_bs_prices.append(price)
     put_data_is_aligned = all(len(values) == len(aligned_put_dates) for values in put_greeks_data.values())
 
-    plt.figure(figsize=(10, 4))
-    
-    if call_data_is_aligned and len(aligned_call_dates) == len(aligned_call_bs_prices):
-        plot_greeks_and_prices(aligned_call_dates, aligned_call_bs_prices, call_greeks_data, 'Call Option', 121)
-    else:
-        print("Call data is not aligned. Cannot plot.")
+    # Now, plot the selected Greeks in separate plots
+    plt.figure(figsize=(10, 8))
 
-    if put_data_is_aligned and len(aligned_put_dates) == len(aligned_put_bs_prices):
-        plot_greeks_and_prices(aligned_put_dates, aligned_put_bs_prices, put_greeks_data, 'Put Option', 122)
-    else:
-        print("Put data is not aligned. Cannot plot.")
+    # Plot Delta and Gamma for Calls
+    plot_selected_greeks(aligned_call_dates, call_greeks_data, ['delta', 'gamma'], 'Call Option Delta & Gamma', 221)
+
+    # Plot other Greeks for Calls
+    other_greeks = ['theta', 'vega', 'rho']
+    plot_selected_greeks(aligned_call_dates, call_greeks_data, other_greeks, 'Call Option Theta, Vega & Rho', 222)
+
+    # Plot Delta and Gamma for Puts
+    plot_selected_greeks(aligned_put_dates, put_greeks_data, ['delta', 'gamma'], 'Put Option Delta & Gamma', 223)
+
+    # Plot other Greeks for Puts
+    plot_selected_greeks(aligned_put_dates, put_greeks_data, other_greeks, 'Put Option Theta, Vega & Rho', 224)
 
     plt.tight_layout()
     plt.show()
