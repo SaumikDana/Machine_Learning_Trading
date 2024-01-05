@@ -111,43 +111,9 @@ def get_info(ticker, options_metrics, start_date, end_date):
     plot_stock_history(ticker, start_date, end_date)
 
     # Strike price distribution
-    ax = plot_strike_price_distribution(options_metrics, ticker)
-
-    # IV distribution
-    plot_iv_strike_price(options_metrics, ticker, ax)
+    plot_strike_price_distribution(options_metrics, ticker)
 
     return
-
-def plot_iv_strike_price(options_data, ticker, ax):
-    # Extract call and put strike prices and their implied volatilities
-    call_strike_prices = options_data['call_strike_prices']
-    call_ivs = options_data['call_ivs']
-    put_strike_prices = options_data['put_strike_prices']
-    put_ivs = options_data['put_ivs']
-
-    # Pair each strike price with its IV and then sort by strike price
-    paired_call_data = sorted(zip(call_strike_prices, call_ivs))
-    paired_put_data = sorted(zip(put_strike_prices, put_ivs))
-
-    # Unzip the paired data into two lists for plotting
-    sorted_call_strikes, sorted_call_ivs = zip(*paired_call_data)
-    sorted_put_strikes, sorted_put_ivs = zip(*paired_put_data)
-
-    # Plot implied volatility against sorted strike prices for calls
-    ax[0,1].plot(sorted_call_strikes, sorted_call_ivs, marker='o', linestyle='-', color='blue', alpha=0.7)
-    ax[0,1].set_title(f'Call Options Implied Volatility for {ticker}')
-    ax[0,1].set_xlabel('Strike Price')
-    ax[0,1].set_ylabel('Implied Volatility')
-
-    # Plot implied volatility against sorted strike prices for puts
-    ax[1,1].plot(sorted_put_strikes, sorted_put_ivs, marker='o', linestyle='-', color='red', alpha=0.7)
-    ax[1,1].set_title(f'Put Options Implied Volatility for {ticker}')
-    ax[1,1].set_xlabel('Strike Price')
-    ax[1,1].set_ylabel('Implied Volatility')
-
-    # Display the plots
-    plt.tight_layout()
-    plt.show()
 
 def plot_strike_price_distribution(options_data, ticker):
     # Extract call and put strike prices from the options data dictionary
@@ -164,22 +130,42 @@ def plot_strike_price_distribution(options_data, ticker):
     call_frequencies = [call_strike_counts[strike] for strike in sorted_call_strikes]
     put_frequencies = [put_strike_counts[strike] for strike in sorted_put_strikes]
 
-    # Create subplots
-    fig, ax = plt.subplots(2, 2, figsize=(12, 6))
+    # Create subplots with 1x2 layout
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
-    # Plot the distribution of strike prices for calls as dots connected by lines
-    ax[0,0].plot(sorted_call_strikes, call_frequencies, marker='o', linestyle='-', color='blue', alpha=0.7)
-    ax[0,0].set_title(f'Call Options Strike Price Frequency for {ticker}')
-    ax[0,0].set_xlabel('Strike Price')
-    ax[0,0].set_ylabel('Frequency')
+    # Plot the distribution of strike prices for calls and puts as dots connected by lines on the same subplot
+    ax[0].plot(sorted_call_strikes, call_frequencies, marker='o', linestyle='-', color='blue', alpha=0.7, label='Call')
+    ax[0].plot(sorted_put_strikes, put_frequencies, marker='o', linestyle='-', color='red', alpha=0.7, label='Put')
+    ax[0].set_title(f'Options Strike Price Frequency for {ticker}')
+    ax[0].set_xlabel('Strike Price')
+    ax[0].set_ylabel('Frequency')
+    ax[0].legend()
 
-    # Plot the distribution of strike prices for puts as dots connected by lines
-    ax[1,0].plot(sorted_put_strikes, put_frequencies, marker='o', linestyle='-', color='red', alpha=0.7)
-    ax[1,0].set_title(f'Put Options Strike Price Frequency for {ticker}')
-    ax[1,0].set_xlabel('Strike Price')
-    ax[1,0].set_ylabel('Frequency')
+    # Extract call and put strike prices and their implied volatilities
+    call_strike_prices = options_data['call_strike_prices']
+    call_ivs = options_data['call_ivs']
+    put_strike_prices = options_data['put_strike_prices']
+    put_ivs = options_data['put_ivs']
 
-    return ax
+    # Pair each strike price with its IV and then sort by strike price
+    paired_call_data = sorted(zip(call_strike_prices, call_ivs))
+    paired_put_data = sorted(zip(put_strike_prices, put_ivs))
+
+    # Unzip the paired data into two lists for plotting
+    sorted_call_strikes, sorted_call_ivs = zip(*paired_call_data)
+    sorted_put_strikes, sorted_put_ivs = zip(*paired_put_data)
+
+    # Plot implied volatility against sorted strike prices for calls and puts on the same subplot
+    ax[1].plot(sorted_call_strikes, sorted_call_ivs, marker='o', linestyle='-', color='blue', alpha=0.7, label='Call IV')
+    ax[1].plot(sorted_put_strikes, sorted_put_ivs, marker='o', linestyle='-', color='red', alpha=0.7, label='Put IV')
+    ax[1].set_title(f'Options Implied Volatility for {ticker}')
+    ax[1].set_xlabel('Strike Price')
+    ax[1].set_ylabel('Implied Volatility')
+    ax[1].legend()
+
+    # Display the plots
+    plt.tight_layout()
+    plt.show()
 
 def analyze_stock_options(ticker, volume_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
