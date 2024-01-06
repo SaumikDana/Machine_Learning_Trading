@@ -167,9 +167,16 @@ def plot_strike_price_distribution(options_data, ticker):
     plt.tight_layout()
     plt.show()
 
-def analyze_stock_options(ticker, volume_factor=0.25):
+def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
+
+    # Get current stock price
+    current_price = stock.info['currentPrice']
+
+    # Calculate bounds for strike price filtering based on current price
+    lower_bound = current_price * (1 - price_range_factor)
+    upper_bound = current_price * (1 + price_range_factor)
 
     # Initialize variables for aggregating options data
     total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, []
@@ -179,67 +186,38 @@ def analyze_stock_options(ticker, volume_factor=0.25):
     call_ivs, put_ivs = [], []  # Lists to store implied volatilities
     exp_dates_count = 0  # Counter for the number of expiration dates
 
-    # Lists to collect all volumes for calculating averages
-    all_call_volumes = []
-    all_put_volumes = []
-
     # Get the list of options expiration dates for the stock
     exp_dates = stock.options
 
     # Loop through each expiration date to analyze options data
-    # Average Volume: Calculate the average volume across all strikes 
-    # and use a multiple of this average as your threshold. 
-    # Strikes with volumes significantly lower than the average could be excluded.
     for date in exp_dates:
         # Retrieve call and put options data for the current expiration date
         options_data = stock.option_chain(date)
 
         call_options, put_options = options_data.calls, options_data.puts
 
-        # Collect all volumes to calculate the average later
-        all_call_volumes.extend(call_options['volume'].dropna().tolist())
-        all_put_volumes.extend(put_options['volume'].dropna().tolist())
+        # Filter options with strike prices within the defined range
+        call_options = call_options[(call_options['strike'] >= lower_bound) & (call_options['strike'] <= upper_bound)]
+        put_options = put_options[(put_options['strike'] >= lower_bound) & (put_options['strike'] <= upper_bound)]
 
-    # Calculate the average volumes
-    average_call_volume = sum(all_call_volumes) / len(all_call_volumes) if all_call_volumes else 0
-    average_put_volume = sum(all_put_volumes) / len(all_put_volumes) if all_put_volumes else 0
-
-    # Determine volume thresholds based on the average and volume factor
-    call_vol_threshold = average_call_volume * volume_factor
-    put_vol_threshold = average_put_volume * volume_factor
- 
-    # Loop through each expiration date to analyze options data
-    for date in exp_dates:
-        # Retrieve call and put options data for the current expiration date
-        options_data = stock.option_chain(date)
-
-        call_options, put_options = options_data.calls, options_data.puts
-
-        # Filter out options with low trading volume
-        call_options = call_options[call_options['volume'] > call_vol_threshold]
-        put_options = put_options[put_options['volume'] > put_vol_threshold]
-
-        # Append strike prices to the respective lists
+        # Append strike prices and implied volatilities to the respective lists
         call_strike_prices.extend(call_options['strike'].tolist())
         put_strike_prices.extend(put_options['strike'].tolist())
-
-        # Append implied volatilities to the respective lists
         call_ivs.extend(call_options['impliedVolatility'].tolist())
         put_ivs.extend(put_options['impliedVolatility'].tolist())
 
-        # Aggregate call options data: sum volumes and open interests
+        # Aggregate call and put options data
         total_call_volume += call_options['volume'].sum()
         total_call_open_interest += call_options['openInterest'].sum()
         total_call_implied_volatility.extend(call_options['impliedVolatility'].tolist())
 
-        # Aggregate put options data: sum volumes and open interests
         total_put_volume += put_options['volume'].sum()
         total_put_open_interest += put_options['openInterest'].sum()
         total_put_implied_volatility.extend(put_options['impliedVolatility'].tolist())
 
-        # Count in-the-money options: calls with strike price below stock price and puts with strike price above
-        total_itm_calls += call_options[call_options['inTheMoney']].shape[0]
-        total_itm_puts += put_options[put_options['inTheMoney']].shape[0]
+        # Count in-the-money options based on the current price
+        total_itm_calls += call_options[call_options['strike'] < current_price].shape[0]
+        total_itm_puts += put_options[put_options['strike'] > current_price].shape[0]
 
         # Increment the expiration dates counter
         exp_dates_count += 1
@@ -248,6 +226,7 @@ def analyze_stock_options(ticker, volume_factor=0.25):
     avg_call_implied_volatility = sum(total_call_implied_volatility) / len(total_call_implied_volatility) if total_call_implied_volatility else 0
     avg_put_implied_volatility = sum(total_put_implied_volatility) / len(total_put_implied_volatility) if total_put_implied_volatility else 0
 
+    # Calculate total engagement for calls and puts
     total_call_engagement = total_call_volume + total_call_open_interest
     total_put_engagement = total_put_volume + total_put_open_interest
 
