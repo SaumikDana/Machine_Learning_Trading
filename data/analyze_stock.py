@@ -4,7 +4,8 @@ import matplotlib.dates as mdates
 import numpy as np
 import matplotlib.ticker as mticker
 from datetime import datetime, timedelta
-from scipy.stats import gaussian_kde
+from scipy.interpolate import griddata
+import pandas as pd
 
 # Specific Stock Analysis
 
@@ -113,7 +114,75 @@ def get_info(ticker, options_metrics, start_date, end_date):
     # Strike price distribution
     plot_strike_price_distribution(options_metrics, ticker)
 
+    # Volatility surface
+    plot_volatility_surface(options_metrics, ticker)
+
     return
+
+# Plot the volatility surface
+def plot_volatility_surface(options_data, ticker):
+
+    # Extract call and put strike prices from the options data dictionary
+    call_strike_prices = options_data['call_strike_prices']
+    put_strike_prices = options_data['put_strike_prices']
+
+    # Extract call and put ivs from the options data dictionary
+    call_ivs = options_data['call_ivs']
+    put_ivs = options_data['put_ivs']
+
+    # Extract call and put expirations from the options data dictionary
+    call_expirations = options_data['call_expirations']
+    put_expirations = options_data['put_expirations']
+
+    # Convert expiration dates to numerical format
+    call_exp_nums = mdates.date2num(pd.to_datetime(call_expirations))
+    put_exp_nums = mdates.date2num(pd.to_datetime(put_expirations))
+
+    # Combine call and put data
+    strikes = np.array(call_strike_prices + put_strike_prices)
+    expirations = np.array(list(call_exp_nums) + list(put_exp_nums))
+    ivs = np.array(call_ivs + put_ivs)
+
+    # Create a 2D grid of strikes and expirations
+    strike_grid, exp_grid = np.meshgrid(
+        np.linspace(strikes.min(), strikes.max(), 100),
+        np.linspace(expirations.min(), expirations.max(), 100)
+    )
+
+    # Interpolate IV data over the grid
+    ivs_grid = griddata((strikes, expirations), ivs, (strike_grid, exp_grid), method='cubic')
+
+    # Plot the surface
+    fig = plt.figure(figsize=(20, 10))  # You may adjust the figure size as needed
+    ax = fig.add_subplot(111, projection='3d')
+
+    surf = ax.plot_surface(strike_grid, exp_grid, ivs_grid, cmap='viridis', edgecolor='none')
+
+    # Labels and title
+    ax.set_title(f'Volatility Surface for {ticker}')
+    ax.set_xlabel('Strike Price')
+    ax.set_ylabel('Expiration Date', labelpad=5)  # Adjust label padding if necessary
+    ax.set_zlabel('Implied Volatility')
+
+    # Formatting for the expiration date axis
+    ax.yaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.yaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+
+    # Reduce the font size of the ticks and rotate them for better readability
+    ax.yaxis.set_tick_params(labelsize=9)  # Adjust font size as needed
+    for label in ax.yaxis.get_majorticklabels():
+        label.set_rotation(45)  # Adjust rotation if necessary
+
+    # Rotate for a better view
+    ax.view_init(30, 210)
+
+    # Add a color bar which maps values to colors, adjust pad to reduce space between plot and colorbar
+    colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
+
+    # Adjust the subplot parameters to give the plot more room
+    plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.05)
+
+    plt.show()
 
 def plot_strike_price_distribution(options_data, ticker):
     # Extract call and put strike prices from the options data dictionary
@@ -130,8 +199,8 @@ def plot_strike_price_distribution(options_data, ticker):
     call_frequencies = [call_strike_counts[strike] for strike in sorted_call_strikes]
     put_frequencies = [put_strike_counts[strike] for strike in sorted_put_strikes]
 
-    # Create subplots with 1x2 layout
-    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+    # Create subplots with 1x3 layout for the third plot
+    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
 
     # Plot the distribution of strike prices for calls and puts as dots connected by lines on the same subplot
     ax[0].plot(sorted_call_strikes, call_frequencies, marker='o', linestyle='-', color='blue', alpha=0.7, label='Call')
@@ -182,7 +251,7 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
     total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, []
     total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, []
     total_itm_calls, total_itm_puts = 0, 0  # Counters for in-the-money options
-    call_strike_prices, put_strike_prices = [], []  # Lists to store strike prices
+    call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  # Lists to store data
     call_ivs, put_ivs = [], []  # Lists to store implied volatilities
     exp_dates_count = 0  # Counter for the number of expiration dates
 
@@ -197,27 +266,29 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
         call_options, put_options = options_data.calls, options_data.puts
 
         # Filter options with strike prices within the defined range
-        call_options = call_options[(call_options['strike'] >= lower_bound) & (call_options['strike'] <= upper_bound)]
-        put_options = put_options[(put_options['strike'] >= lower_bound) & (put_options['strike'] <= upper_bound)]
+        filtered_call_options = call_options[(call_options['strike'] >= lower_bound) & (call_options['strike'] <= upper_bound)]
+        filtered_put_options = put_options[(put_options['strike'] >= lower_bound) & (put_options['strike'] <= upper_bound)]
 
-        # Append strike prices and implied volatilities to the respective lists
-        call_strike_prices.extend(call_options['strike'].tolist())
-        put_strike_prices.extend(put_options['strike'].tolist())
-        call_ivs.extend(call_options['impliedVolatility'].tolist())
-        put_ivs.extend(put_options['impliedVolatility'].tolist())
+        # Append strike prices, implied volatilities, and expiration dates to the respective lists
+        call_strike_prices.extend(filtered_call_options['strike'].tolist())
+        put_strike_prices.extend(filtered_put_options['strike'].tolist())
+        call_ivs.extend(filtered_call_options['impliedVolatility'].tolist())
+        put_ivs.extend(filtered_put_options['impliedVolatility'].tolist())
+        call_expirations.extend([date] * len(filtered_call_options))
+        put_expirations.extend([date] * len(filtered_put_options))
 
         # Aggregate call and put options data
-        total_call_volume += call_options['volume'].sum()
-        total_call_open_interest += call_options['openInterest'].sum()
-        total_call_implied_volatility.extend(call_options['impliedVolatility'].tolist())
+        total_call_volume += filtered_call_options['volume'].sum()
+        total_call_open_interest += filtered_call_options['openInterest'].sum()
+        total_call_implied_volatility.extend(filtered_call_options['impliedVolatility'].tolist())
 
-        total_put_volume += put_options['volume'].sum()
-        total_put_open_interest += put_options['openInterest'].sum()
-        total_put_implied_volatility.extend(put_options['impliedVolatility'].tolist())
+        total_put_volume += filtered_put_options['volume'].sum()
+        total_put_open_interest += filtered_put_options['openInterest'].sum()
+        total_put_implied_volatility.extend(filtered_put_options['impliedVolatility'].tolist())
 
         # Count in-the-money options based on the current price
-        total_itm_calls += call_options[call_options['strike'] < current_price].shape[0]
-        total_itm_puts += put_options[put_options['strike'] > current_price].shape[0]
+        total_itm_calls += len(filtered_call_options[filtered_call_options['strike'] < current_price])
+        total_itm_puts += len(filtered_put_options[filtered_put_options['strike'] > current_price])
 
         # Increment the expiration dates counter
         exp_dates_count += 1
@@ -245,7 +316,9 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
         "call_strike_prices": call_strike_prices,
         "put_strike_prices": put_strike_prices,
         "call_ivs": call_ivs,
-        "put_ivs": put_ivs
+        "put_ivs": put_ivs,
+        "call_expirations": call_expirations,
+        "put_expirations": put_expirations
     }
 
 def print_options_data(ticker, options_metrics):
