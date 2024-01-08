@@ -236,6 +236,58 @@ def plot_strike_price_distribution(options_data, ticker):
     plt.tight_layout()
     plt.show()
 
+def plot_iv_skew_for_calls_puts_separately(options_data, target_date, ticker, days_range=21):
+    # Extract call and put strike prices and IVs
+    call_strike_prices = options_data['call_strike_prices']
+    put_strike_prices = options_data['put_strike_prices']
+    call_ivs = options_data['call_ivs']
+    put_ivs = options_data['put_ivs']
+    call_expirations = options_data['call_expirations']
+    put_expirations = options_data['put_expirations']
+
+    # Convert expiration dates to datetime objects and filter by target date
+    call_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in call_expirations]
+    put_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in put_expirations]
+    target_date_dt = np.datetime64(target_date)
+
+    # Filter call data
+    filtered_call_data = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
+                          if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D')]
+    filtered_call_strikes, filtered_call_ivs, filtered_call_expirations = zip(*filtered_call_data) if filtered_call_data else ([], [], [])
+
+    # Filter put data
+    filtered_put_data = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
+                         if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D')]
+    filtered_put_strikes, filtered_put_ivs, filtered_put_expirations = zip(*filtered_put_data) if filtered_put_data else ([], [], [])
+
+    # Fetch the current stock price
+    stock = yf.Ticker(ticker)
+    current_price = stock.info['currentPrice']
+
+    # Plot filtered call data
+    if filtered_call_data:
+        plt.figure(figsize=(10, 6))
+        plt.scatter(filtered_call_strikes, filtered_call_ivs, color='blue', marker='o', label='Calls')
+        plt.axvline(current_price, color='grey', linestyle='--', label='Current Price')
+        plt.title(f'Call Options Implied Volatility Skew - {ticker}')
+        plt.xlabel('Strike Price')
+        plt.ylabel('Implied Volatility')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    # Plot filtered put data
+    if filtered_put_data:
+        plt.figure(figsize=(10, 6))
+        plt.scatter(filtered_put_strikes, filtered_put_ivs, color='green', marker='o', label='Puts')
+        plt.axvline(current_price, color='grey', linestyle='--', label='Current Price')
+        plt.title(f'Put Options Implied Volatility Skew - {ticker}')
+        plt.xlabel('Strike Price')
+        plt.ylabel('Implied Volatility')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
 def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
