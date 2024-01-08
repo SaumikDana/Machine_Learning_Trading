@@ -264,29 +264,29 @@ def plot_iv_skew_for_calls_puts_separately(options_data, target_date, ticker, da
     stock = yf.Ticker(ticker)
     current_price = stock.info['currentPrice']
 
-    # Plot filtered call data
-    if filtered_call_data:
-        plt.figure(figsize=(10, 6))
-        plt.scatter(filtered_call_strikes, filtered_call_ivs, color='blue', marker='o', label='Calls')
-        plt.axvline(current_price, color='grey', linestyle='--', label='Current Price')
-        plt.title(f'Call Options Implied Volatility Skew - {ticker}')
-        plt.xlabel('Strike Price')
-        plt.ylabel('Implied Volatility')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+    # Create side by side subplots
+    fig, axs = plt.subplots(1, 2, figsize=(15, 6))
 
-    # Plot filtered put data
-    if filtered_put_data:
-        plt.figure(figsize=(10, 6))
-        plt.scatter(filtered_put_strikes, filtered_put_ivs, color='green', marker='o', label='Puts')
-        plt.axvline(current_price, color='grey', linestyle='--', label='Current Price')
-        plt.title(f'Put Options Implied Volatility Skew - {ticker}')
-        plt.xlabel('Strike Price')
-        plt.ylabel('Implied Volatility')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+    # Plot filtered call data on the first subplot
+    axs[0].scatter(filtered_call_strikes, filtered_call_ivs, color='blue', marker='o', label='Calls')
+    axs[0].axvline(current_price, color='grey', linestyle='--', label='Current Price')
+    axs[0].set_title(f'Call Options Implied Volatility Skew - {ticker}')
+    axs[0].set_xlabel('Strike Price')
+    axs[0].set_ylabel('Implied Volatility')
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plot filtered put data on the second subplot
+    axs[1].scatter(filtered_put_strikes, filtered_put_ivs, color='green', marker='o', label='Puts')
+    axs[1].axvline(current_price, color='grey', linestyle='--', label='Current Price')
+    axs[1].set_title(f'Put Options Implied Volatility Skew - {ticker}')
+    axs[1].set_xlabel('Strike Price')
+    axs[1].set_ylabel('Implied Volatility')
+    axs[1].legend()
+    axs[1].grid(True)
+
+    plt.tight_layout()
+    plt.show()
 
 def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
