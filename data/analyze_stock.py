@@ -328,7 +328,7 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     ax.set_title(f'OTM Options Implied Volatility Skew - {ticker}')
     ax.set_xlabel('Strike Price / Current Price')
     ax.set_ylabel('Implied Volatility')
-    ax.legend()
+    ax.legend(frameon=False)
     ax.grid(True)
 
     plt.tight_layout()
