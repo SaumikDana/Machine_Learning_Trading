@@ -119,70 +119,71 @@ def get_info(ticker, options_metrics, start_date, end_date):
 
     return
 
-# Plot the volatility surface
 def plot_volatility_surface(options_data, ticker):
+    try:
+        # Extract data
+        call_strike_prices = options_data['call_strike_prices']
+        put_strike_prices = options_data['put_strike_prices']
+        call_ivs = options_data['call_ivs']
+        put_ivs = options_data['put_ivs']
+        call_expirations = options_data['call_expirations']
+        put_expirations = options_data['put_expirations']
 
-    # Extract call and put strike prices from the options data dictionary
-    call_strike_prices = options_data['call_strike_prices']
-    put_strike_prices = options_data['put_strike_prices']
+        # Convert expiration dates to numerical format
+        call_exp_nums = mdates.date2num(pd.to_datetime(call_expirations))
+        put_exp_nums = mdates.date2num(pd.to_datetime(put_expirations))
 
-    # Extract call and put ivs from the options data dictionary
-    call_ivs = options_data['call_ivs']
-    put_ivs = options_data['put_ivs']
+        # Combine call and put data
+        strikes = np.array(call_strike_prices + put_strike_prices)
+        expirations = np.array(list(call_exp_nums) + list(put_exp_nums))
+        ivs = np.array(call_ivs + put_ivs)
 
-    # Extract call and put expirations from the options data dictionary
-    call_expirations = options_data['call_expirations']
-    put_expirations = options_data['put_expirations']
+        # Check for sufficient variation in data
+        if len(set(strikes)) < 2 or len(set(expirations)) < 2:
+            print("Insufficient variation in strike prices or expiration dates for interpolation.")
+            return
 
-    # Convert expiration dates to numerical format
-    call_exp_nums = mdates.date2num(pd.to_datetime(call_expirations))
-    put_exp_nums = mdates.date2num(pd.to_datetime(put_expirations))
+        # Check for NaNs or infinite values
+        if np.isnan(ivs).any() or np.isinf(ivs).any():
+            print("Data contains NaNs or infinite values.")
+            return
 
-    # Combine call and put data
-    strikes = np.array(call_strike_prices + put_strike_prices)
-    expirations = np.array(list(call_exp_nums) + list(put_exp_nums))
-    ivs = np.array(call_ivs + put_ivs)
+        # Create a 2D grid of strikes and expirations
+        strike_grid, exp_grid = np.meshgrid(
+            np.linspace(strikes.min(), strikes.max(), 100),
+            np.linspace(expirations.min(), expirations.max(), 100)
+        )
 
-    # Create a 2D grid of strikes and expirations
-    strike_grid, exp_grid = np.meshgrid(
-        np.linspace(strikes.min(), strikes.max(), 100),
-        np.linspace(expirations.min(), expirations.max(), 100)
-    )
+        # Interpolate IV data over the grid
+        ivs_grid = griddata((strikes, expirations), ivs, (strike_grid, exp_grid), method='cubic')
 
-    # Interpolate IV data over the grid
-    ivs_grid = griddata((strikes, expirations), ivs, (strike_grid, exp_grid), method='cubic')
+        # Plot the surface
+        fig = plt.figure(figsize=(20, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        surf = ax.plot_surface(strike_grid, exp_grid, ivs_grid, cmap='viridis', edgecolor='none')
 
-    # Plot the surface
-    fig = plt.figure(figsize=(20, 10))  # You may adjust the figure size as needed
-    ax = fig.add_subplot(111, projection='3d')
+        # Labels and title
+        ax.set_title(f'Volatility Surface for {ticker}')
+        ax.set_xlabel('Strike Price')
+        ax.set_ylabel('Expiration Date')
+        ax.set_zlabel('Implied Volatility')
 
-    surf = ax.plot_surface(strike_grid, exp_grid, ivs_grid, cmap='viridis', edgecolor='none')
+        # Date formatting
+        ax.yaxis.set_major_locator(mdates.AutoDateLocator())
+        ax.yaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+        ax.yaxis.set_tick_params(labelsize=9)
+        for label in ax.yaxis.get_majorticklabels():
+            label.set_rotation(45)
 
-    # Labels and title
-    ax.set_title(f'Volatility Surface for {ticker}')
-    ax.set_xlabel('Strike Price')
-    ax.set_ylabel('Expiration Date', labelpad=5)  # Adjust label padding if necessary
-    ax.set_zlabel('Implied Volatility')
+        # View adjustment
+        ax.view_init(30, 210)
+        colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
+        plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.05)
 
-    # Formatting for the expiration date axis
-    ax.yaxis.set_major_locator(mdates.AutoDateLocator())
-    ax.yaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+        plt.show()
 
-    # Reduce the font size of the ticks and rotate them for better readability
-    ax.yaxis.set_tick_params(labelsize=9)  # Adjust font size as needed
-    for label in ax.yaxis.get_majorticklabels():
-        label.set_rotation(45)  # Adjust rotation if necessary
-
-    # Rotate for a better view
-    ax.view_init(30, 210)
-
-    # Add a color bar which maps values to colors, adjust pad to reduce space between plot and colorbar
-    colorbar = fig.colorbar(surf, shrink=0.5, aspect=30, pad=-0.025)
-
-    # Adjust the subplot parameters to give the plot more room
-    plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.05)
-
-    plt.show()
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def plot_strike_price_distribution(options_data, ticker):
     # Extract call and put strike prices from the options data dictionary
@@ -306,14 +307,14 @@ def plot_iv_skew_upside_downside(options_data, target_date, ticker, days_range=2
     put_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in put_expirations]
     target_date_dt = np.datetime64(target_date)
 
-    # Filter call data for upside skew (ITM and ATM)
+    # Filter call data for upside skew (OTM)
     filtered_call_data_upside = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
-                                 if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike <= current_price]
+                                 if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike > current_price]
     filtered_call_strikes_upside, filtered_call_ivs_upside, _ = zip(*filtered_call_data_upside) if filtered_call_data_upside else ([], [], [])
 
-    # Filter put data for downside skew (ITM and ATM)
+    # Filter put data for downside skew (OTM)
     filtered_put_data_downside = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
-                                  if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike >= current_price]
+                                  if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike < current_price]
     filtered_put_strikes_downside, filtered_put_ivs_downside, _ = zip(*filtered_put_data_downside) if filtered_put_data_downside else ([], [], [])
 
     # Create subplots for upside and downside skews
@@ -339,7 +340,7 @@ def plot_iv_skew_upside_downside(options_data, target_date, ticker, days_range=2
 
     plt.tight_layout()
     plt.show()
-
+    
 def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
