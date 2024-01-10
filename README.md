@@ -24,16 +24,16 @@ Machine_Learning_Trading/
 │   ├── create_data.ipynb (Notebook for data creation)
 │   ├── earnings_release.ipynb (Notebook analyzing earnings releases)
 │   ├── futures.ipynb (Notebook on futures trading)
-│   ├── kc_house_data.csv (CSV file, possibly King County house data)
+│   ├── kc_house_data.csv (CSV file, King County house data)
 │   ├── markovian_v_non-markovian.ipynb (Notebook on Markovian vs non-Markovian processes)
-│   ├── message_types.csv (CSV file, possibly related to messaging or data types)
+│   ├── message_types.csv (CSV file, related to messaging or data types)
 │   ├── message_types.xlsx (Excel file, similar to message_types.csv)
 │   ├── scrape_url.py (Python script for URL scraping)
 │   ├── specific_stock_analysis.ipynb (Notebook for analysis of specific stocks)
 │   ├── us_equities_meta_data.csv (CSV file with metadata on US equities)
 │   ├── utils.py (Python utility script)
 │   ├── wiener_process.ipynb (Notebook on Wiener processes)
-│   └── wiki_stocks.csv (CSV file, possibly related to stock data from Wikipedia)
+│   └── wiki_stocks.csv (CSV file, related to stock data from Wikipedia)
 │
 ├── decision trees/
 │   ├── .ipynb_checkpoints/ (Jupyter notebook checkpoints)
@@ -75,10 +75,10 @@ Machine_Learning_Trading/
 │   ├── boundary.png (Image file, possibly a plot or graph)
 │   ├── decision_trees/
 │   │   └── reg_tree_t2.dot (Graphviz dot file for a regression tree)
-│   ├── ffnn_data.png (Image file, possibly related to feedforward neural network data)
-│   ├── ffnn_loss.png (Image file, possibly a loss graph for a neural network)
+│   ├── ffnn_data.png (Image file, related to feedforward neural network data)
+│   ├── ffnn_loss.png (Image file, a loss graph for a neural network)
 │   ├── projection3d.png (3D projection image file)
-│   └── surface.png (Image file, possibly a surface plot)
+│   └── surface.png (Image file, a surface plot)
 │
 └── README.md (Readme file with repository overview)
 ```
