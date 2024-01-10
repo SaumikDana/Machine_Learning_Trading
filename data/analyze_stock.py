@@ -289,7 +289,7 @@ def plot_iv_skew_for_calls_puts_separately(options_data, target_date, ticker, da
     plt.tight_layout()
     plt.show()
 
-def plot_iv_skew_upside_downside(options_data, target_date, ticker, days_range=21):
+def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     # Fetch the current stock price
     stock = yf.Ticker(ticker)
     current_price = stock.info['currentPrice']
@@ -307,40 +307,33 @@ def plot_iv_skew_upside_downside(options_data, target_date, ticker, days_range=2
     put_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in put_expirations]
     target_date_dt = np.datetime64(target_date)
 
-    # Filter call data for upside skew (OTM)
-    filtered_call_data_upside = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
-                                 if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike > current_price]
-    filtered_call_strikes_upside, filtered_call_ivs_upside, _ = zip(*filtered_call_data_upside) if filtered_call_data_upside else ([], [], [])
+    # Filter call data for OTM options
+    filtered_call_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
+                              if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike > current_price]
+    call_strikes_rel_otm, call_ivs_rel_otm = zip(*[(strike/current_price, iv) for strike, iv, _ in filtered_call_data_otm]) if filtered_call_data_otm else ([], [])
 
-    # Filter put data for downside skew (OTM)
-    filtered_put_data_downside = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
-                                  if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike < current_price]
-    filtered_put_strikes_downside, filtered_put_ivs_downside, _ = zip(*filtered_put_data_downside) if filtered_put_data_downside else ([], [], [])
+    # Filter put data for OTM options
+    filtered_put_data_otm = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
+                             if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike < current_price]
+    put_strikes_rel_otm, put_ivs_rel_otm = zip(*[(strike/current_price, iv) for strike, iv, _ in filtered_put_data_otm]) if filtered_put_data_otm else ([], [])
 
-    # Create subplots for upside and downside skews
-    fig, axs = plt.subplots(1, 2, figsize=(15, 6))
+    # Create plot for combined OTM skew
+    fig, ax = plt.subplots(figsize=(15, 6))
 
-    # Plot filtered call data for upside skew
-    axs[0].scatter(filtered_call_strikes_upside, filtered_call_ivs_upside, color='blue', marker='o', label='Calls (Upside)')
-    axs[0].axvline(current_price, color='grey', linestyle='--', label='Current Price')
-    axs[0].set_title(f'Call Options Upside Implied Volatility Skew - {ticker}')
-    axs[0].set_xlabel('Strike Price')
-    axs[0].set_ylabel('Implied Volatility')
-    axs[0].legend()
-    axs[0].grid(True)
+    # Plot OTM call and put data
+    ax.scatter(call_strikes_rel_otm, call_ivs_rel_otm, color='blue', marker='o', label='OTM Calls')
+    ax.scatter(put_strikes_rel_otm, put_ivs_rel_otm, color='green', marker='o', label='OTM Puts')
+    ax.axvline(1, color='grey', linestyle='--', label='Current Price')
 
-    # Plot filtered put data for downside skew
-    axs[1].scatter(filtered_put_strikes_downside, filtered_put_ivs_downside, color='green', marker='o', label='Puts (Downside)')
-    axs[1].axvline(current_price, color='grey', linestyle='--', label='Current Price')
-    axs[1].set_title(f'Put Options Downside Implied Volatility Skew - {ticker}')
-    axs[1].set_xlabel('Strike Price')
-    axs[1].set_ylabel('Implied Volatility')
-    axs[1].legend()
-    axs[1].grid(True)
+    ax.set_title(f'OTM Options Implied Volatility Skew - {ticker}')
+    ax.set_xlabel('Strike Price / Current Price')
+    ax.set_ylabel('Implied Volatility')
+    ax.legend()
+    ax.grid(True)
 
     plt.tight_layout()
     plt.show()
-    
+
 def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
