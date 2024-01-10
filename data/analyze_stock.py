@@ -288,6 +288,58 @@ def plot_iv_skew_for_calls_puts_separately(options_data, target_date, ticker, da
     plt.tight_layout()
     plt.show()
 
+def plot_iv_skew_upside_downside(options_data, target_date, ticker, days_range=21):
+    # Fetch the current stock price
+    stock = yf.Ticker(ticker)
+    current_price = stock.info['currentPrice']
+
+    # Extract call and put strike prices and IVs
+    call_strike_prices = options_data['call_strike_prices']
+    put_strike_prices = options_data['put_strike_prices']
+    call_ivs = options_data['call_ivs']
+    put_ivs = options_data['put_ivs']
+    call_expirations = options_data['call_expirations']
+    put_expirations = options_data['put_expirations']
+
+    # Convert expiration dates to datetime objects and filter by target date
+    call_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in call_expirations]
+    put_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in put_expirations]
+    target_date_dt = np.datetime64(target_date)
+
+    # Filter call data for upside skew (ITM and ATM)
+    filtered_call_data_upside = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
+                                 if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike <= current_price]
+    filtered_call_strikes_upside, filtered_call_ivs_upside, _ = zip(*filtered_call_data_upside) if filtered_call_data_upside else ([], [], [])
+
+    # Filter put data for downside skew (ITM and ATM)
+    filtered_put_data_downside = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
+                                  if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D') and strike >= current_price]
+    filtered_put_strikes_downside, filtered_put_ivs_downside, _ = zip(*filtered_put_data_downside) if filtered_put_data_downside else ([], [], [])
+
+    # Create subplots for upside and downside skews
+    fig, axs = plt.subplots(1, 2, figsize=(15, 6))
+
+    # Plot filtered call data for upside skew
+    axs[0].scatter(filtered_call_strikes_upside, filtered_call_ivs_upside, color='blue', marker='o', label='Calls (Upside)')
+    axs[0].axvline(current_price, color='grey', linestyle='--', label='Current Price')
+    axs[0].set_title(f'Call Options Upside Implied Volatility Skew - {ticker}')
+    axs[0].set_xlabel('Strike Price')
+    axs[0].set_ylabel('Implied Volatility')
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plot filtered put data for downside skew
+    axs[1].scatter(filtered_put_strikes_downside, filtered_put_ivs_downside, color='green', marker='o', label='Puts (Downside)')
+    axs[1].axvline(current_price, color='grey', linestyle='--', label='Current Price')
+    axs[1].set_title(f'Put Options Downside Implied Volatility Skew - {ticker}')
+    axs[1].set_xlabel('Strike Price')
+    axs[1].set_ylabel('Implied Volatility')
+    axs[1].legend()
+    axs[1].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
 def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
     stock = yf.Ticker(ticker)
