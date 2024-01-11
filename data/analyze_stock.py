@@ -237,62 +237,12 @@ def plot_strike_price_distribution(options_data, ticker):
     plt.tight_layout()
     plt.show()
 
-def plot_iv_skew_for_calls_puts_separately(options_data, target_date, ticker, days_range=21):
-    # Extract call and put strike prices and IVs
-    call_strike_prices = options_data['call_strike_prices']
-    put_strike_prices = options_data['put_strike_prices']
-    call_ivs = options_data['call_ivs']
-    put_ivs = options_data['put_ivs']
-    call_expirations = options_data['call_expirations']
-    put_expirations = options_data['put_expirations']
-
-    # Convert expiration dates to datetime objects and filter by target date
-    call_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in call_expirations]
-    put_expirations_dt = [datetime.strptime(date, "%Y-%m-%d") for date in put_expirations]
-    target_date_dt = np.datetime64(target_date)
-
-    # Filter call data
-    filtered_call_data = [(strike, iv, exp) for strike, iv, exp in zip(call_strike_prices, call_ivs, call_expirations_dt)
-                          if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D')]
-    filtered_call_strikes, filtered_call_ivs, filtered_call_expirations = zip(*filtered_call_data) if filtered_call_data else ([], [], [])
-
-    # Filter put data
-    filtered_put_data = [(strike, iv, exp) for strike, iv, exp in zip(put_strike_prices, put_ivs, put_expirations_dt)
-                         if exp > target_date_dt and exp <= target_date_dt + np.timedelta64(days_range, 'D')]
-    filtered_put_strikes, filtered_put_ivs, filtered_put_expirations = zip(*filtered_put_data) if filtered_put_data else ([], [], [])
-
-    # Fetch the current stock price
-    stock = yf.Ticker(ticker)
-    current_price = stock.info['currentPrice']
-
-    # Create side by side subplots
-    fig, axs = plt.subplots(1, 2, figsize=(15, 6))
-
-    # Plot filtered call data on the first subplot
-    axs[0].scatter(filtered_call_strikes, filtered_call_ivs, color='blue', marker='o', label='Calls')
-    axs[0].axvline(current_price, color='grey', linestyle='--', label='Current Price')
-    axs[0].set_title(f'Call Options Implied Volatility Skew - {ticker}')
-    axs[0].set_xlabel('Strike Price')
-    axs[0].set_ylabel('Implied Volatility')
-    axs[0].legend()
-    axs[0].grid(True)
-
-    # Plot filtered put data on the second subplot
-    axs[1].scatter(filtered_put_strikes, filtered_put_ivs, color='green', marker='o', label='Puts')
-    axs[1].axvline(current_price, color='grey', linestyle='--', label='Current Price')
-    axs[1].set_title(f'Put Options Implied Volatility Skew - {ticker}')
-    axs[1].set_xlabel('Strike Price')
-    axs[1].set_ylabel('Implied Volatility')
-    axs[1].legend()
-    axs[1].grid(True)
-
-    plt.tight_layout()
-    plt.show()
-
 def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     # Fetch the current stock price
     stock = yf.Ticker(ticker)
     current_price = stock.info['currentPrice']
+
+    historical_volatility = calculate_historical_volatility(ticker)
 
     # Extract call and put strike prices and IVs
     call_strike_prices = options_data['call_strike_prices']
@@ -325,6 +275,9 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     ax.scatter(put_strikes_rel_otm, put_ivs_rel_otm, color='green', marker='o', label='OTM Puts')
     ax.axvline(1, color='grey', linestyle='--', label='Current Price')
 
+    # Overlay historical volatility as a horizontal line
+    ax.axhline(y=historical_volatility, color='purple', linestyle='--', label=f'Historical Volatility ({historical_volatility:.2%})')
+
     ax.set_title(f'OTM Options Implied Volatility Skew - {ticker}')
     ax.set_xlabel('Strike Price / Current Price')
     ax.set_ylabel('Implied Volatility')
@@ -333,6 +286,19 @@ def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
 
     plt.tight_layout()
     plt.show()
+
+def calculate_historical_volatility(ticker_symbol, period="1y"):
+    # Fetch historical stock data
+    stock = yf.Ticker(ticker_symbol)
+    hist = stock.history(period=period)
+
+    # Calculate daily returns
+    daily_returns = hist['Close'].pct_change().dropna()
+
+    # Calculate standard deviation of daily returns (historical volatility)
+    historical_volatility = np.std(daily_returns)
+    
+    return historical_volatility
 
 def analyze_stock_options(ticker, price_range_factor=0.25):
     # Fetch the stock data using the provided ticker symbol
@@ -349,6 +315,7 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
     total_call_volume, total_call_open_interest, total_call_implied_volatility = 0, 0, []
     total_put_volume, total_put_open_interest, total_put_implied_volatility = 0, 0, []
     total_itm_calls, total_itm_puts = 0, 0  # Counters for in-the-money options
+    total_otm_calls, total_otm_puts = 0, 0  # Counters for out-of-the-money options
     call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  # Lists to store data
     call_ivs, put_ivs = [], []  # Lists to store implied volatilities
     exp_dates_count = 0  # Counter for the number of expiration dates
@@ -384,9 +351,12 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
         total_put_open_interest += filtered_put_options['openInterest'].sum()
         total_put_implied_volatility.extend(filtered_put_options['impliedVolatility'].tolist())
 
-        # Count in-the-money options based on the current price
+        # Count in-the-money and out-of-the-money options based on the current price
         total_itm_calls += len(filtered_call_options[filtered_call_options['strike'] < current_price])
+        total_otm_calls += len(filtered_call_options[filtered_call_options['strike'] > current_price])
+
         total_itm_puts += len(filtered_put_options[filtered_put_options['strike'] > current_price])
+        total_otm_puts += len(filtered_put_options[filtered_put_options['strike'] < current_price])
 
         # Increment the expiration dates counter
         exp_dates_count += 1
@@ -411,6 +381,8 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
         "total_put_open_interest": total_put_open_interest,
         "total_itm_calls": total_itm_calls,
         "total_itm_puts": total_itm_puts,
+        "total_otm_calls": total_otm_calls,
+        "total_otm_puts": total_otm_puts,
         "call_strike_prices": call_strike_prices,
         "put_strike_prices": put_strike_prices,
         "call_ivs": call_ivs,
@@ -437,5 +409,9 @@ def print_options_data(ticker, options_metrics):
 
     print(f"Number of ITM Call Options: {options_metrics['total_itm_calls']}")
     print(f"Number of ITM Put Options: {options_metrics['total_itm_puts']}")
+
+    print(f"Number of OTM Call Options: {options_metrics['total_otm_calls']}")
+    print(f"Number of OTM Put Options: {options_metrics['total_otm_puts']}")
     
     return
+
