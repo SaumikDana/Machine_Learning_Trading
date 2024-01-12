@@ -111,8 +111,8 @@ def get_info(ticker, options_metrics, start_date, end_date):
     # Call the plot_stock_history method
     plot_stock_history(ticker, start_date, end_date)
 
-    # Strike price distribution
-    plot_strike_price_distribution(options_metrics, ticker)
+    # # Strike price distribution
+    # plot_strike_price_distribution(options_metrics, ticker)
 
     # Volatility surface
     plot_volatility_surface(options_metrics, ticker)
