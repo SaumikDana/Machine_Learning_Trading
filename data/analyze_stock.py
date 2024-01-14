@@ -111,9 +111,6 @@ def get_info(ticker, options_metrics, start_date, end_date):
     # Call the plot_stock_history method
     plot_stock_history(ticker, start_date, end_date)
 
-    # # Strike price distribution
-    # plot_strike_price_distribution(options_metrics, ticker)
-
     # Volatility surface
     plot_volatility_surface(options_metrics, ticker)
 
@@ -122,8 +119,10 @@ def get_info(ticker, options_metrics, start_date, end_date):
 def plot_volatility_surface(options_data, ticker):
     try:
         # Extract data
-        call_strike_prices = options_data['call_strike_prices']
-        put_strike_prices = options_data['put_strike_prices']
+        stock = yf.Ticker(ticker)
+        current_price = stock.info['currentPrice']
+        call_strike_prices = list(np.array(options_data['call_strike_prices'])/current_price)
+        put_strike_prices = list(np.array(options_data['put_strike_prices'])/current_price)
         call_ivs = options_data['call_ivs']
         put_ivs = options_data['put_ivs']
         call_expirations = options_data['call_expirations']
@@ -164,7 +163,7 @@ def plot_volatility_surface(options_data, ticker):
 
         # Labels and title
         ax.set_title(f'Volatility Surface for {ticker}')
-        ax.set_xlabel('Strike Price')
+        ax.set_xlabel('Moneyness (Strike Price/Current Price)')
         ax.set_ylabel('Expiration Date')
         ax.set_zlabel('Implied Volatility')
 
@@ -184,58 +183,6 @@ def plot_volatility_surface(options_data, ticker):
 
     except Exception as e:
         print(f"An error occurred: {e}")
-
-def plot_strike_price_distribution(options_data, ticker):
-    # Extract call and put strike prices from the options data dictionary
-    call_strike_prices = options_data['call_strike_prices']
-    put_strike_prices = options_data['put_strike_prices']
-
-    # Count the frequency of each strike price for calls and puts
-    call_strike_counts = {price: call_strike_prices.count(price) for price in set(call_strike_prices)}
-    put_strike_counts = {price: put_strike_prices.count(price) for price in set(put_strike_prices)}
-
-    # Sort the strike prices and corresponding frequencies
-    sorted_call_strikes = sorted(call_strike_counts.keys())
-    sorted_put_strikes = sorted(put_strike_counts.keys())
-    call_frequencies = [call_strike_counts[strike] for strike in sorted_call_strikes]
-    put_frequencies = [put_strike_counts[strike] for strike in sorted_put_strikes]
-
-    # Create subplots with 1x3 layout for the third plot
-    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-
-    # Plot the distribution of strike prices for calls and puts as dots connected by lines on the same subplot
-    ax[0].plot(sorted_call_strikes, call_frequencies, marker='o', linestyle='-', color='blue', alpha=0.7, label='Call')
-    ax[0].plot(sorted_put_strikes, put_frequencies, marker='o', linestyle='-', color='red', alpha=0.7, label='Put')
-    ax[0].set_title(f'Options Strike Price Frequency for {ticker}')
-    ax[0].set_xlabel('Strike Price')
-    ax[0].set_ylabel('Frequency')
-    ax[0].legend()
-
-    # Extract call and put strike prices and their implied volatilities
-    call_strike_prices = options_data['call_strike_prices']
-    call_ivs = options_data['call_ivs']
-    put_strike_prices = options_data['put_strike_prices']
-    put_ivs = options_data['put_ivs']
-
-    # Pair each strike price with its IV and then sort by strike price
-    paired_call_data = sorted(zip(call_strike_prices, call_ivs))
-    paired_put_data = sorted(zip(put_strike_prices, put_ivs))
-
-    # Unzip the paired data into two lists for plotting
-    sorted_call_strikes, sorted_call_ivs = zip(*paired_call_data)
-    sorted_put_strikes, sorted_put_ivs = zip(*paired_put_data)
-
-    # Plot implied volatility against sorted strike prices for calls and puts on the same subplot
-    ax[1].plot(sorted_call_strikes, sorted_call_ivs, marker='o', linestyle='-', color='blue', alpha=0.7, label='Call IV')
-    ax[1].plot(sorted_put_strikes, sorted_put_ivs, marker='o', linestyle='-', color='red', alpha=0.7, label='Put IV')
-    ax[1].set_title(f'Options Implied Volatility for {ticker}')
-    ax[1].set_xlabel('Strike Price')
-    ax[1].set_ylabel('Implied Volatility')
-    ax[1].legend()
-
-    # Display the plots
-    plt.tight_layout()
-    plt.show()
 
 def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     # Fetch the current stock price
