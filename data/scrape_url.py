@@ -33,11 +33,7 @@ def process_earnings_table(table, ticker_data_list=[]):
             ticker = row.get('Symbol')
             if pd.notna(ticker):
                 price = get_stock_price(ticker)
-                ticker_data_list.append(
-                    pd.DataFrame(
-                        {'Symbol': [ticker], 'Stock Price': [price]}
-                        )
-                    )
+                ticker_data_list.append(pd.DataFrame({'Symbol': [ticker], 'Stock Price': [price]}))
 
     return ticker_data_list
 

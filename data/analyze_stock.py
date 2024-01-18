@@ -74,7 +74,41 @@ def stock_tracker(ticker_symbol, subplot_position):
     plt.tick_params(axis='x', labelsize=6)
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
 
-def plot_historical_data(ticker_symbol, start_date, end_date):
+def plot_etf_historical_data(ticker_symbol, start_date, end_date):
+
+    # Fetch stock information
+    stock = yf.Ticker(ticker_symbol)
+
+    # Get the industry of the stock
+    industry = stock.info.get("industry", None)
+
+    # Extract etf ticker symbol corresponding to industry
+    etf_ticker_symbol = get_sector_etf_for_stock().get(industry)
+    
+    # Check if ticker_symbol is not None
+    if etf_ticker_symbol is None:
+        return
+
+    # Plot historical data
+    plot_historical_data(etf_ticker_symbol, industry, start_date, end_date)
+
+    return
+
+def plot_stock_historical_data(ticker_symbol, start_date, end_date):
+
+    # Fetch stock information
+    stock = yf.Ticker(ticker_symbol)
+
+    # Get the industry of the stock
+    industry = stock.info.get("industry", None)
+
+    # Plot historical data
+    plot_historical_data(ticker_symbol, industry, start_date, end_date)
+
+    return
+
+def plot_historical_data(ticker_symbol, industry, start_date, end_date):
+
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=start_date, end=end_date)
 
@@ -87,7 +121,7 @@ def plot_historical_data(ticker_symbol, start_date, end_date):
         raise ValueError("No suitable price data found for this stock.")
 
     plt.plot(hist.index, prices, '-o', markersize=2)
-    plt.title(f"Stock Price History of {ticker_symbol}", fontsize='small')
+    plt.title(f"Stock Price History of {ticker_symbol} ({industry})", fontsize='small')
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.xticks(rotation=45)
@@ -108,7 +142,7 @@ def plot_stock_history(ticker_symbol, start_date, end_date):
 
     # Plotting stock history
     plt.subplot(1, 2, 2)
-    plot_historical_data(ticker_symbol, start_date, end_date)
+    plot_stock_historical_data(ticker_symbol, start_date, end_date)
     
 def get_info(ticker, options_metrics, start_date, end_date):
     
@@ -123,7 +157,7 @@ def get_info(ticker, options_metrics, start_date, end_date):
 
     return
 
-def get_sector_etf_for_stock(ticker_symbol):
+def get_sector_etf_for_stock():
     # Dictionary mapping industries to their corresponding ETFs
     industry_etf_dict = {
         "Residential Construction": "XHB",
@@ -177,13 +211,4 @@ def get_sector_etf_for_stock(ticker_symbol):
         "Restaurants": "PBJ"
     }
 
-    # Fetch stock information
-    stock = yf.Ticker(ticker_symbol)
-    stock_info = stock.info
-
-    # Get the industry of the stock
-    industry = stock_info.get("industry", None)
-
-    # Return the ETF corresponding to the industry
-    return industry_etf_dict.get(industry, "Sector ETF not found for the given industry")
-
+    return industry_etf_dict
