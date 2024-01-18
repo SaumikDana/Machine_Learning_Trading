@@ -12,10 +12,11 @@ import pandas as pd
 def print_info_keys(ticker_symbol):
     stock = yf.Ticker(ticker_symbol)
     try:
-        stock_info_keys = stock.info.keys()
-        print(f"Keys in stock.info for {ticker_symbol}:")
-        for key in stock_info_keys:
-            print(key)
+        stock_info = stock.info  # Fetch stock information
+        print(f"Information for {ticker_symbol}:")
+        for key, value in stock_info.items():
+            if key == "industry":
+                print(f"{key}: {value}")
     except Exception as e:
         print(f"Error retrieving info for {ticker_symbol}: {e}")
 
@@ -362,3 +363,57 @@ def print_options_data(ticker, options_metrics):
     
     return
 
+def get_industry_etf_dict():
+    # Dictionary mapping industries to their corresponding ETFs
+    industry_etf_dict = {
+        "Residential Construction": "XHB",
+        "Specialty Chemicals": "XLB",
+        "Credit Services": "XLF",
+        "Financial Data & Stock Exchanges": "IYG",
+        "Electrical Equipment & Parts": "XLI",
+        "Computer Hardware": "XLK",
+        "Farm & Heavy Construction Machinery": "XLI",
+        "Insurance Brokers": "IAK",
+        "Software - Infrastructure": "IGV",
+        "Steel": "SLX",
+        "Semiconductors": "SMH",
+        "Aerospace & Defense": "ITA",
+        "REIT - Office": "IYR",
+        "Capital Markets": "IAI",
+        "Furnishings, Fixtures & Appliances": "XLY",
+        "Banks - Regional": "KRE",
+        "Industrial Distribution": "FXR",
+        "Specialty Industrial Machinery": "XLI",
+        "Medical Instruments & Supplies": "IHI",
+        "Railroads": "IYT",
+        "Medical Devices": "IHI",
+        "REIT - Residential": "REZ",
+        "Conglomerates": None,  # No specific ETF
+        "Electronic Components": "SOXX",
+        "Packaged Foods": "XLP",
+        "REIT - Specialty": "XLRE",
+        "Insurance - Life": "IAK",
+        "Software - Application": "IGV",
+        "Asset Management": "XLF",
+        "Communication Equipment": "XLK",
+        "Internet Content & Information": "XLC",
+        "Oil & Gas Drilling": "OIH",
+        "Electronics & Computer Distribution": "XLK",
+        "Thermal Coal": None,  # No specific ETF
+        "Information Technology Services": "XLK",
+        "Airlines": "JETS",
+        "REIT - Mortgage": "REM",
+        "Packaging & Containers": "XLB",
+        "Auto Parts": "CARZ",
+        "Food Distribution": "XLP",
+        "Diagnostics & Research": "IHF",
+        "Pharmaceutical Retailers": "XLP",
+        "Telecom Services": "XLC",
+        "Biotechnology": "IBB",
+        "Drug Manufacturers - Specialty & Generic": "XPH",
+        "Pollution & Treatment Controls": "XLI",  # Part of a broader category
+        "Tobacco": "XLP",
+        "Restaurants": "PBJ"
+    }
+
+    return industry_etf_dict
