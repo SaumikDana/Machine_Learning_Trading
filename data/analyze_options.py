@@ -77,7 +77,7 @@ def plot_volatility_surface(options_data, ticker):
 def plot_iv_skew_otm_only(options_data, target_date, ticker, days_range=21):
     # Fetch the current stock price
     stock = yf.Ticker(ticker)
-    current_price = stock.info['currentPrice']
+    current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
 
     historical_volatility = calculate_historical_volatility(ticker)
 
@@ -142,7 +142,7 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
     stock = yf.Ticker(ticker)
 
     # Get current stock price
-    current_price = stock.info['currentPrice']
+    current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
 
     # Calculate bounds for strike price filtering based on current price
     lower_bound = current_price * (1 - price_range_factor)
