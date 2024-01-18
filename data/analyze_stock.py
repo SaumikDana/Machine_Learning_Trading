@@ -15,8 +15,7 @@ def print_info_keys(ticker_symbol):
         stock_info = stock.info  # Fetch stock information
         print(f"Information for {ticker_symbol}:")
         for key, value in stock_info.items():
-            if key == "industry":
-                print(f"{key}: {value}")
+            print(f"{key}: {value}")
     except Exception as e:
         print(f"Error retrieving info for {ticker_symbol}: {e}")
 
@@ -59,7 +58,6 @@ def stock_tracker(ticker_symbol, subplot_position):
         try:
             ticker = yf.Ticker(ticker_symbol)
             todays_data = ticker.history(period='1d', interval='1m')
-            print(f"Data fetched for {ticker_symbol}, entries: {len(todays_data)}")
             return todays_data
         except Exception as e:
             print(f"Error fetching historical prices: {e}")
@@ -79,31 +77,42 @@ def stock_tracker(ticker_symbol, subplot_position):
     plt.tick_params(axis='x', labelsize=6)
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
 
-def plot_stock_history(ticker_symbol, start_date, end_date):
-    # Adjust the overall plot size
-    plt.figure(figsize=(10, 4))
-    
-    # First plot: Today's prices
-    stock_tracker(ticker_symbol, 1)
-
+def plot_historical_data(ticker_symbol, start_date, end_date):
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=start_date, end=end_date)
 
-    plt.subplot(1, 2, 2)
-    plt.plot(hist.index, hist['Close'], '-o', markersize=2)
+    # Determine which data to plot: Close or regularMarketPreviousClose
+    if 'Close' in hist.columns:
+        prices = hist['Close']
+    elif hasattr(stock.info, 'regularMarketPreviousClose'):
+        prices = [stock.info['regularMarketPreviousClose']] * len(hist)
+    else:
+        raise ValueError("No suitable price data found for this stock.")
+
+    plt.plot(hist.index, prices, '-o', markersize=2)
     plt.title(f"Stock Price History of {ticker_symbol}", fontsize='small')
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.xticks(rotation=45)
     plt.yticks(fontsize='small')
     plt.xlabel('Date', fontsize='small')
-    plt.ylabel('Closing Price', fontsize='small')
+    plt.ylabel('Price', fontsize='small')
     plt.grid(True)
     plt.tick_params(axis='x', labelsize=6)
     plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
-    
+
     plt.show()
 
+def plot_stock_history(ticker_symbol, start_date, end_date):
+    plt.figure(figsize=(10, 4))
+    
+    # Plotting today's prices - Assuming stock_tracker is a defined function
+    stock_tracker(ticker_symbol, 1)
+
+    # Plotting stock history
+    plt.subplot(1, 2, 2)
+    plot_historical_data(ticker_symbol, start_date, end_date)
+    
 def get_info(ticker, options_metrics, start_date, end_date):
     
     # Print 
@@ -121,7 +130,7 @@ def plot_volatility_surface(options_data, ticker):
     try:
         # Extract data
         stock = yf.Ticker(ticker)
-        current_price = stock.info['currentPrice']
+        current_price = stock.info.get('currentPrice', stock.info.get('previousClose', None))
         call_strike_prices = list(np.array(options_data['call_strike_prices'])/current_price)
         put_strike_prices = list(np.array(options_data['put_strike_prices'])/current_price)
         call_ivs = options_data['call_ivs']
@@ -339,60 +348,10 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
         "put_expirations": put_expirations
     }
 
-def analyze_etf_options(ticker, price_range_factor=0.25):
-    # Fetch the stock data using the provided ticker symbol
-    stock = yf.Ticker(ticker)
-
-    # Get current stock price
-    current_price = stock.info['currentPrice']
-
-    # Calculate bounds for strike price filtering based on current price
-    lower_bound = current_price * (1 - price_range_factor)
-    upper_bound = current_price * (1 + price_range_factor)
-
-    # Initialize variables for aggregating options data
-    call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  # Lists to store data
-    call_ivs, put_ivs = [], []  # Lists to store implied volatilities
-    exp_dates_count = 0  # Counter for the number of expiration dates
-
-    # Get the list of options expiration dates for the stock
-    exp_dates = stock.options
-
-    # Loop through each expiration date to analyze options data
-    for date in exp_dates:
-        # Retrieve call and put options data for the current expiration date
-        options_data = stock.option_chain(date)
-
-        call_options, put_options = options_data.calls, options_data.puts
-
-        # Filter options with strike prices within the defined range
-        filtered_call_options = call_options[(call_options['strike'] >= lower_bound) & (call_options['strike'] <= upper_bound)]
-        filtered_put_options = put_options[(put_options['strike'] >= lower_bound) & (put_options['strike'] <= upper_bound)]
-
-        # Append strike prices, implied volatilities, and expiration dates to the respective lists
-        call_strike_prices.extend(filtered_call_options['strike'].tolist())
-        put_strike_prices.extend(filtered_put_options['strike'].tolist())
-        call_ivs.extend(filtered_call_options['impliedVolatility'].tolist())
-        put_ivs.extend(filtered_put_options['impliedVolatility'].tolist())
-        call_expirations.extend([date] * len(filtered_call_options))
-        put_expirations.extend([date] * len(filtered_put_options))
-
-        # Increment the expiration dates counter
-        exp_dates_count += 1
-
-    # Return a dictionary with the aggregated and calculated options metrics
-    return {
-        "call_strike_prices": call_strike_prices,
-        "put_strike_prices": put_strike_prices,
-        "call_ivs": call_ivs,
-        "put_ivs": put_ivs,
-        "call_expirations": call_expirations,
-        "put_expirations": put_expirations
-    }
-
 def print_options_data(ticker, options_metrics):
     
     print("===========================================")
+
     print(f"Options data for {ticker}:")
 
     print(f"Average IV for Calls: {options_metrics['avg_call_implied_volatility']}")
@@ -411,7 +370,9 @@ def print_options_data(ticker, options_metrics):
 
     print(f"Number of OTM Call Options: {options_metrics['total_otm_calls']}")
     print(f"Number of OTM Put Options: {options_metrics['total_otm_puts']}")
-    
+
+    print("===========================================")
+
     return
 
 def get_sector_etf_for_stock(ticker_symbol):
@@ -428,6 +389,7 @@ def get_sector_etf_for_stock(ticker_symbol):
         "Software - Infrastructure": "IGV",
         "Steel": "SLX",
         "Semiconductors": "SMH",
+        "Semiconductor Equipment & Materials": "SMH",
         "Aerospace & Defense": "ITA",
         "REIT - Office": "IYR",
         "Capital Markets": "IAI",
@@ -476,3 +438,4 @@ def get_sector_etf_for_stock(ticker_symbol):
 
     # Return the ETF corresponding to the industry
     return industry_etf_dict.get(industry, "Sector ETF not found for the given industry")
+
