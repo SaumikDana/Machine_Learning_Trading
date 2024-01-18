@@ -339,6 +339,57 @@ def analyze_stock_options(ticker, price_range_factor=0.25):
         "put_expirations": put_expirations
     }
 
+def analyze_etf_options(ticker, price_range_factor=0.25):
+    # Fetch the stock data using the provided ticker symbol
+    stock = yf.Ticker(ticker)
+
+    # Get current stock price
+    current_price = stock.info['currentPrice']
+
+    # Calculate bounds for strike price filtering based on current price
+    lower_bound = current_price * (1 - price_range_factor)
+    upper_bound = current_price * (1 + price_range_factor)
+
+    # Initialize variables for aggregating options data
+    call_strike_prices, put_strike_prices, call_expirations, put_expirations = [], [], [], []  # Lists to store data
+    call_ivs, put_ivs = [], []  # Lists to store implied volatilities
+    exp_dates_count = 0  # Counter for the number of expiration dates
+
+    # Get the list of options expiration dates for the stock
+    exp_dates = stock.options
+
+    # Loop through each expiration date to analyze options data
+    for date in exp_dates:
+        # Retrieve call and put options data for the current expiration date
+        options_data = stock.option_chain(date)
+
+        call_options, put_options = options_data.calls, options_data.puts
+
+        # Filter options with strike prices within the defined range
+        filtered_call_options = call_options[(call_options['strike'] >= lower_bound) & (call_options['strike'] <= upper_bound)]
+        filtered_put_options = put_options[(put_options['strike'] >= lower_bound) & (put_options['strike'] <= upper_bound)]
+
+        # Append strike prices, implied volatilities, and expiration dates to the respective lists
+        call_strike_prices.extend(filtered_call_options['strike'].tolist())
+        put_strike_prices.extend(filtered_put_options['strike'].tolist())
+        call_ivs.extend(filtered_call_options['impliedVolatility'].tolist())
+        put_ivs.extend(filtered_put_options['impliedVolatility'].tolist())
+        call_expirations.extend([date] * len(filtered_call_options))
+        put_expirations.extend([date] * len(filtered_put_options))
+
+        # Increment the expiration dates counter
+        exp_dates_count += 1
+
+    # Return a dictionary with the aggregated and calculated options metrics
+    return {
+        "call_strike_prices": call_strike_prices,
+        "put_strike_prices": put_strike_prices,
+        "call_ivs": call_ivs,
+        "put_ivs": put_ivs,
+        "call_expirations": call_expirations,
+        "put_expirations": put_expirations
+    }
+
 def print_options_data(ticker, options_metrics):
     
     print("===========================================")
@@ -363,7 +414,7 @@ def print_options_data(ticker, options_metrics):
     
     return
 
-def get_industry_etf_dict():
+def get_sector_etf_for_stock(ticker_symbol):
     # Dictionary mapping industries to their corresponding ETFs
     industry_etf_dict = {
         "Residential Construction": "XHB",
@@ -416,4 +467,12 @@ def get_industry_etf_dict():
         "Restaurants": "PBJ"
     }
 
-    return industry_etf_dict
+    # Fetch stock information
+    stock = yf.Ticker(ticker_symbol)
+    stock_info = stock.info
+
+    # Get the industry of the stock
+    industry = stock_info.get("industry", None)
+
+    # Return the ETF corresponding to the industry
+    return industry_etf_dict.get(industry, "Sector ETF not found for the given industry")
