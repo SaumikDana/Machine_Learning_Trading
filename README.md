@@ -9,7 +9,7 @@ Machine_Learning_Trading/
 │
 ├── data/
 │   ├── analyze_options.py               (Script for analyzing stock options, including plotting volatility surfaces and IV skews)
-│   ├── analyze_stock.py                 (Script likely containing functions for stock analysis)
+│   ├── analyze_stock.py                 (Script containing functions for stock analysis)
 │   ├── black_scholes.py                 (Implementations related to the Black-Scholes model)
 │   ├── brownian_motion.ipynb            (Demonstrates Brownian motion concepts)
 │   ├── create_data.ipynb                (Code for data creation or preprocessing)
