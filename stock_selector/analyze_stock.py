@@ -107,7 +107,7 @@ def plot_stock_historical_data(ticker_symbol, start_date, end_date):
 
     return
 
-def plot_historical_data(ticker_symbol, industry, start_date, end_date, long='False'):
+def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=False):
 
     stock = yf.Ticker(ticker_symbol)
     hist = stock.history(start=start_date, end=end_date)
@@ -126,7 +126,7 @@ def plot_historical_data(ticker_symbol, industry, start_date, end_date, long='Fa
     plt.xlabel('Date', fontsize='small')
     plt.ylabel('Price', fontsize='small')
     plt.grid(True)
-
+    
     if not long:
         plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
         plt.gca().xaxis.set_major_locator(mdates.DayLocator())
