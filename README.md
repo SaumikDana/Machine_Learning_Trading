@@ -37,9 +37,9 @@ Machine_Learning_Trading/
 └── README.md
 ```
 
-## /data/
+## /stock_selector/
 
-![strategy](https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/2a1de833-3538-4193-9892-df2ad5f29bfd)
+<img width="870" alt="Screen Shot 2024-01-18 at 10 23 06 PM" src="https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/d8fde927-7adb-4065-8c81-c4bc49f7bffc">
 
 
 ## Concomitant Focus Areas
