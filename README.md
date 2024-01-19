@@ -8,7 +8,7 @@ Machine_Learning_Trading/
 ├── alpha_factors/                       (Feature engineering notebooks, TA-Lib usage, Kalman filter and wavelets)
 │
 ├── data/
-│   ├── analyze_options.py               (Script for analyzing stock options, including plotting volatility surfaces and IV skews)
+│   ├── analyze_options.py               (Script for analyzing stock options, plotting volatility surfaces and IV skews)
 │   ├── analyze_stock.py                 (Script containing functions for stock analysis)
 │   ├── black_scholes.py                 (Implementations related to the Black-Scholes model)
 │   ├── brownian_motion.ipynb            (Demonstrates Brownian motion concepts)
