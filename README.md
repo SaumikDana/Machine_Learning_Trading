@@ -3,43 +3,38 @@
 ```
 Machine_Learning_Trading/
 │
-├── .ipynb_checkpoints/                  (Various Jupyter notebook checkpoints)
+├── alpha_factors/ (Contains notebooks on feature engineering, TA-Lib, and Kalman filter)
 │
-├── alpha_factors/                       (Feature engineering notebooks, TA-Lib usage, Kalman filter and wavelets)
+├── data/ (Includes data files and notebooks for data creation and analysis)
 │
-├── data/
-│   ├── analyze_options.py               (Script for analyzing stock options, plotting volatility surfaces and IV skews)
-│   ├── analyze_stock.py                 (Script containing functions for stock analysis)
-│   ├── black_scholes.py                 (Implementations related to the Black-Scholes model)
-│   ├── brownian_motion.ipynb            (Demonstrates Brownian motion concepts)
-│   ├── create_data.ipynb                (Code for data creation or preprocessing)
-│   ├── earnings_release.ipynb           (Analysis of earnings release impact on stocks or options)
-│   ├── etf_analysis.ipynb               (Analysis of ETFs, comparing sectors or strategies)
-│   ├── futures.ipynb                    (Analysis of futures contracts)
-│   ├── kc_house_data.csv                (Data related to housing, for regression analysis or predictive modeling)
-│   ├── markovian_v_non-markovian.ipynb  (Exploring Markovian vs. non-Markovian processes)
-│   ├── message_types.csv                (Structured data related to financial messages or transaction types)
-│   ├── message_types.xlsx               (Same as message_types.csv, in Excel format)
-│   ├── scrape_url.py                    (Python script for web scraping financial data)
-│   ├── specific_stock_analysis.ipynb    (Analysis focused on specific stocks)
-│   ├── us_equities_meta_data.csv        (Metadata about U.S. equities)
-│   └── wiener_process.ipynb             (Explaining the Wiener process)
+├── decision trees/ (Notebooks related to decision tree models and their results)
 │
-├── decision_trees/                      (Notebooks on decision trees)
+├── deep_learning/ (Notebooks on deep learning models and PyTorch usage)
 │
-├── deep_learning/                       (Neural networks and PyTorch notebooks)
+├── linear_models/ (Linear regression models and related notebooks)
 │
-├── linear_models/                       (Notebooks on linear regression and Fama MacBeth)
+├── machine_learning_process/ (Discusses machine learning workflow and concepts)
 │
-├── machine_learning_process/            (ML workflow and bias-variance)
+├── stock_selector/
+│   ├── analyze_options.py (Python script for analyzing options)
+│   ├── analyze_stock.py (Python script for stock analysis)
+│   ├── black_scholes.py (Python script implementing the Black-Scholes model)
+│   ├── brownian_motion.ipynb (Jupyter Notebook explaining Brownian motion)
+│   ├── earnings_release.ipynb (Jupyter Notebook analyzing earnings releases)
+│   ├── etf_analysis.ipynb (Jupyter Notebook for ETF analysis)
+│   ├── futures.ipynb (Jupyter Notebook discussing futures trading)
+│   ├── markovian_v_non-markovian.ipynb (Jupyter Notebook comparing Markovian and non-Markovian processes)
+│   ├── scrape_url.py (Python script for scraping URLs)
+│   ├── specific_stock_analysis.ipynb (Jupyter Notebook for analysis of specific stocks)
+│   └── wiener_process.ipynb (Jupyter Notebook about the Wiener process)
 │
-├── time_series_models/                  (Time series analysis notebooks)
+├── time_series_models/ (Notebooks on time series analysis and models)
 │
-├── unsupervised_learning/               (PCA and dimensionality topics)
+├── unsupervised_learning/ (Notebooks on PCA, dimensionality, and related topics)
 │
-├── README.md
+├── results/ (Contains various result images and files)
 │
-└── results/                             (Analysis images and results)
+└── README.md
 ```
 
 ## /data/
