@@ -39,7 +39,7 @@ Machine_Learning_Trading/
 
 ## /stock_selector/
 
-<img width="870" alt="Screen Shot 2024-01-18 at 10 23 06 PM" src="https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/d8fde927-7adb-4065-8c81-c4bc49f7bffc">
+<img width="870" alt="strategy" src="https://github.com/SaumikDana/Machine_Learning_Trading/assets/9474631/2b054d24-44b1-4a2a-bf7e-1be75ad09afd">
 
 
 ## Concomitant Focus Areas
