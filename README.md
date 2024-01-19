@@ -3,84 +3,43 @@
 ```
 Machine_Learning_Trading/
 │
-├── .ipynb_checkpoints/ (Various Jupyter notebook checkpoints)
+├── .ipynb_checkpoints/                  (Various Jupyter notebook checkpoints)
 │
-├── alpha_factors/
-│   ├── .ipynb_checkpoints/ (Jupyter notebook checkpoints)
-│   ├── feature_engineering.ipynb (Notebook on feature engineering in trading)
-│   ├── how_to_use_talib.ipynb (Notebook on using TA-Lib for technical analysis)
-│   └── kalman_filter_and_wavelets.ipynb (Notebook on Kalman filters and wavelets in trading)
+├── alpha_factors/                       (Feature engineering notebooks, TA-Lib usage, Kalman filter and wavelets)
 │
 ├── data/
-│   ├── .ipynb_checkpoints/
-│   │   ├── create_data-checkpoint.ipynb (Checkpoint for data creation notebook)
-│   │   └── earnings_release-checkpoint.ipynb (Checkpoint for earnings release analysis notebook)
-│   ├── __pycache__/ (Compiled Python files)
-│   ├── Brownian Motion for Quants _ Stochastic Calculus.ipynb (Notebook on Brownian motion and stochastic calculus)
-│   ├── FeatureEng_StockAnalysis.ipynb (Notebook on feature engineering for stock analysis)
-│   ├── ^spx_d.csv (CSV file, possibly S&P 500 daily data)
-│   ├── analyze_stock.py (Python script for stock analysis)
-│   ├── black_scholes.py (Python script for Black-Scholes model)
-│   ├── create_data.ipynb (Notebook for data creation)
-│   ├── earnings_release.ipynb (Notebook analyzing earnings releases)
-│   ├── futures.ipynb (Notebook on futures trading)
-│   ├── kc_house_data.csv (CSV file, King County house data)
-│   ├── markovian_v_non-markovian.ipynb (Notebook on Markovian vs non-Markovian processes)
-│   ├── message_types.csv (CSV file, related to messaging or data types)
-│   ├── message_types.xlsx (Excel file, similar to message_types.csv)
-│   ├── scrape_url.py (Python script for URL scraping)
-│   ├── specific_stock_analysis.ipynb (Notebook for analysis of specific stocks)
-│   ├── us_equities_meta_data.csv (CSV file with metadata on US equities)
-│   ├── utils.py (Python utility script)
-│   ├── wiener_process.ipynb (Notebook on Wiener processes)
-│   └── wiki_stocks.csv (CSV file, related to stock data from Wikipedia)
+│   ├── analyze_options.py               (Script for analyzing stock options, including plotting volatility surfaces and IV skews)
+│   ├── analyze_stock.py                 (Script likely containing functions for stock analysis)
+│   ├── black_scholes.py                 (Implementations related to the Black-Scholes model)
+│   ├── brownian_motion.ipynb            (Demonstrates Brownian motion concepts)
+│   ├── create_data.ipynb                (Code for data creation or preprocessing)
+│   ├── earnings_release.ipynb           (Analysis of earnings release impact on stocks or options)
+│   ├── etf_analysis.ipynb               (Analysis of ETFs, comparing sectors or strategies)
+│   ├── futures.ipynb                    (Analysis of futures contracts)
+│   ├── kc_house_data.csv                (Data related to housing, for regression analysis or predictive modeling)
+│   ├── markovian_v_non-markovian.ipynb  (Exploring Markovian vs. non-Markovian processes)
+│   ├── message_types.csv                (Structured data related to financial messages or transaction types)
+│   ├── message_types.xlsx               (Same as message_types.csv, in Excel format)
+│   ├── scrape_url.py                    (Python script for web scraping financial data)
+│   ├── specific_stock_analysis.ipynb    (Analysis focused on specific stocks)
+│   ├── us_equities_meta_data.csv        (Metadata about U.S. equities)
+│   └── wiener_process.ipynb             (Explaining the Wiener process)
 │
-├── decision trees/
-│   ├── .ipynb_checkpoints/ (Jupyter notebook checkpoints)
-│   ├── bagged_decision_trees.ipynb (Notebook on bagged decision trees)
-│   ├── data_prep_decision_trees_random_forests.ipynb (Notebook on data preparation for decision trees and random forests)
-│   ├── decision_trees.ipynb (Notebook on decision trees)
-│   └── results/
-│       └── decision_trees/
-│           ├── clf_tree_t2.dot (Graphviz dot file for a classification tree)
-│           └── reg_tree_t2.dot (Graphviz dot file for a regression tree)
+├── decision_trees/                      (Notebooks on decision trees)
 │
-├── deep_learning/
-│   ├── build_and_train_feedforward_nn.ipynb (Notebook on building and training feedforward neural networks)
-│   └── how_to_use_pytorch.ipynb (Notebook on using PyTorch for deep learning)
+├── deep_learning/                       (Neural networks and PyTorch notebooks)
 │
-├── linear_models/
-│   ├── fama_macbeth.ipynb (Notebook on Fama-MacBeth regression in finance)
-│   ├── linear_regression.ipynb (Notebook on linear regression models)
-│   ├── predicting_stock_returns_with_linear_regression.ipynb (Notebook on predicting stock returns using linear regression)
-│   └── prepping_data.ipynb (Notebook on data preparation for linear models)
+├── linear_models/                       (Notebooks on linear regression and Fama MacBeth)
 │
-├── machine_learning_process/
-│   ├── bias_variance.ipynb (Notebook on bias-variance tradeoff in machine learning)
-│   └── ml_workflow.ipynb (Notebook on machine learning workflow)
+├── machine_learning_process/            (ML workflow and bias-variance)
 │
-├── time_series_models/
-│   ├── arch_garch_models.ipynb (Notebook on ARCH and GARCH models in time series)
-│   ├── arima_models.ipynb (Notebook on ARIMA models in time series)
-│   ├── tsa_stationarity.ipynb (Notebook on time series stationarity)
-│   └── vector_autoregressive_model.ipynb (Notebook on vector autoregressive models)
+├── time_series_models/                  (Time series analysis notebooks)
 │
-├── unsupervised_learning/
-│   ├── curse_dimensionality.ipynb (Notebook on the curse of dimensionality)
-│   ├── pca_and_risk_factor_models.ipynb (Notebook on PCA and risk factor models)
-│   ├── pca_key_ideas.ipynb (Notebook on key ideas of PCA)
-│   └── the_math_behind_pca.ipynb (Notebook on the mathematics behind PCA)
+├── unsupervised_learning/               (PCA and dimensionality topics)
 │
-├── results/
-│   ├── boundary.png (Image file, possibly a plot or graph)
-│   ├── decision_trees/
-│   │   └── reg_tree_t2.dot (Graphviz dot file for a regression tree)
-│   ├── ffnn_data.png (Image file, related to feedforward neural network data)
-│   ├── ffnn_loss.png (Image file, a loss graph for a neural network)
-│   ├── projection3d.png (3D projection image file)
-│   └── surface.png (Image file, a surface plot)
+├── README.md
 │
-└── README.md (Readme file with repository overview)
+└── results/                             (Analysis images and results)
 ```
 
 ## /data/
