@@ -155,9 +155,6 @@ def get_info(ticker, options_metrics, start_date, end_date):
     # Call the plot_stock_history method
     plot_stock_history(ticker, start_date, end_date)
 
-    # Volatility surface
-    plot_volatility_surface(options_metrics, ticker)
-
     return
 
 def get_sector_etf_for_stock():
