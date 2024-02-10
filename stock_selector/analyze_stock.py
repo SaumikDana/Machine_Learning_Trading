@@ -1,10 +1,6 @@
-import matplotlib.pyplot as plt
 import yfinance as yf  
-import matplotlib.dates as mdates
-import matplotlib.ticker as mticker
-from datetime import datetime, timedelta
 from analyze_options import *
-
+from plotting_routines import *
 
 def print_info_keys(ticker_symbol):
     stock = yf.Ticker(ticker_symbol)
@@ -29,123 +25,6 @@ def get_financial_ratios(ticker_symbol, start_date, end_date):
     # Other calculations could follow a similar pattern if the data were available
     
     return hist
-
-# Function to plot the P/E ratio time series
-def plot_pe_ratio(ticker_symbol, date):
-    start_date = date - timedelta(days=365)  # Approximately 1 year back
-    end_date = date  # Up to the current date
-
-    hist = get_financial_ratios(ticker_symbol, start_date, end_date)
-
-    if 'P/E' in hist.columns:
-        plt.figure(figsize=(10, 5))
-        plt.plot(hist.index, hist['P/E'], '-o', markersize=2, label='P/E')
-        plt.title(f"P/E Ratio History of {ticker_symbol}")
-        plt.xlabel('Date')
-        plt.ylabel('P/E Ratio')
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-        plt.xticks(rotation=45)
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-    
-def stock_tracker(ticker_symbol, subplot_position):
-    def get_todays_prices(ticker_symbol):
-        try:
-            ticker = yf.Ticker(ticker_symbol)
-            todays_data = ticker.history(period='1d', interval='1m')
-            return todays_data
-        except Exception as e:
-            print(f"Error fetching historical prices: {e}")
-            return None
-
-    todays_prices = get_todays_prices(ticker_symbol)
-    times = [ts.strftime('%H:%M') for ts in todays_prices.index]
-    
-    plt.subplot(1, 2, subplot_position)
-    plt.plot(times, todays_prices['Close'])
-    plt.title(f"Today's Stock Price of {ticker_symbol}", fontsize='small')
-    plt.xticks(times[::20], rotation=45)
-    plt.yticks(fontsize='small')
-    plt.xlabel('Time', fontsize='small')
-    plt.ylabel('Price', fontsize='small')
-    plt.grid(True)
-    plt.tick_params(axis='x', labelsize=6)
-    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
-
-def plot_etf_historical_data(ticker_symbol, start_date, end_date):
-
-    # Fetch stock information
-    stock = yf.Ticker(ticker_symbol)
-
-    # Get the industry of the stock
-    industry = stock.info.get("industry", None)
-
-    # Extract etf ticker symbol corresponding to industry
-    etf_ticker_symbol = get_sector_etf_for_stock().get(industry)
-    
-    # Check if ticker_symbol is not None
-    if etf_ticker_symbol is None:
-        return
-
-    # Plot historical data
-    plot_historical_data(etf_ticker_symbol, industry, start_date, end_date)
-
-    return
-
-def plot_stock_historical_data(ticker_symbol, start_date, end_date):
-
-    # Fetch stock information
-    stock = yf.Ticker(ticker_symbol)
-
-    # Get the industry of the stock
-    industry = stock.info.get("industry", None)
-
-    # Plot historical data
-    plot_historical_data(ticker_symbol, industry, start_date, end_date)
-
-    return
-
-def plot_historical_data(ticker_symbol, industry, start_date, end_date, long=False):
-
-    stock = yf.Ticker(ticker_symbol)
-    hist = stock.history(start=start_date, end=end_date)
-
-    # Determine which data to plot: Close or regularMarketPreviousClose
-    if 'Close' in hist.columns:
-        prices = hist['Close']
-    elif hasattr(stock.info, 'regularMarketPreviousClose'):
-        prices = [stock.info['regularMarketPreviousClose']] * len(hist)
-    else:
-        raise ValueError("No suitable price data found for this stock.")
-
-    plt.plot(hist.index, prices, '-o', markersize=2)
-    plt.title(f"Stock Price History of {ticker_symbol} ({industry})", fontsize='small')
-    plt.yticks(fontsize='small')
-    plt.xlabel('Date', fontsize='small')
-    plt.ylabel('Price', fontsize='small')
-    plt.grid(True)
-    
-    if not long:
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-        plt.xticks(rotation=45)
-        plt.tick_params(axis='x', labelsize=6)
-
-    plt.gca().yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2f'))
-
-    plt.show()
-
-def plot_stock_history(ticker_symbol, start_date, end_date):
-    plt.figure(figsize=(10, 4))
-    
-    # Plotting today's prices - Assuming stock_tracker is a defined function
-    stock_tracker(ticker_symbol, 1)
-
-    # Plotting stock history
-    plt.subplot(1, 2, 2)
-    plot_stock_historical_data(ticker_symbol, start_date, end_date)
     
 def get_info(ticker, options_metrics, start_date, end_date):
     
