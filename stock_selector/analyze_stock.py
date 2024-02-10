@@ -1,6 +1,5 @@
 import yfinance as yf  
 from analyze_options import *
-from plotting_routines import *
 
 def print_info_keys(ticker_symbol):
     stock = yf.Ticker(ticker_symbol)
@@ -26,16 +25,6 @@ def get_financial_ratios(ticker_symbol, start_date, end_date):
     
     return hist
     
-def get_info(ticker, options_metrics, start_date, end_date):
-    
-    # Print 
-    print_options_data(ticker, options_metrics)
-    
-    # Call the plot_stock_history method
-    plot_stock_history(ticker, start_date, end_date)
-
-    return
-
 def get_sector_etf_for_stock():
     # Dictionary mapping industries to their corresponding ETFs
     industry_etf_dict = {
